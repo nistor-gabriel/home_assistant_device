@@ -1,0 +1,486 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+sensor:
+  - platform: rest
+    unique_id: lumina_stalp_gradina_status
+    name: Lumina Stalp Gradina
+    icon: mdi:coach-lamp
+    resource: http://192.168.100.80/relay/2
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: pompa_gradina_status
+    name: Pompa Gradina
+    icon: mdi:water-pump
+    resource: http://192.168.100.80/relay/1
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: pompa_gradina_presiune
+    name: Pompa Presiune
+    icon: mdi:water-pump
+    resource: http://192.168.100.80/pump/pressure
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: "{{ value_json.pressure }}"
+  - platform: rest
+    unique_id: stropitoare_fata_1_status
+    name: Stropitoare fata 1
+    icon: mdi:sprinkler
+    resource: http://192.168.100.82/relay/2
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: stropitoare_fata_2_status
+    name: Stropitoare fata 2
+    icon: mdi:sprinkler
+    resource: http://192.168.100.82/relay/1
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: stropitoare_spate_1_status
+    name: Stropitoare spate 1
+    icon: mdi:sprinkler
+    resource: http://192.168.100.81/relay/3
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: stropitoare_spate_2_status
+    name: Stropitoare spate 2
+    icon: mdi:sprinkler
+    resource: http://192.168.100.81/relay/2
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: stropitoare_spate_3_status
+    name: Stropitoare spate 3
+    icon: mdi:sprinkler
+    resource: http://192.168.100.81/relay/1
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: stropitoare_spate_4_status
+    name: Stropitoare spate 4
+    icon: mdi:sprinkler
+    resource: http://192.168.100.81/relay/4
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: rest
+    unique_id: stropitoare_spate_5_status
+    name: Stropitoare spate 5
+    icon: mdi:sprinkler
+    resource: http://192.168.100.81/relay/5
+    username: user
+    password: !secret rest_password
+    authentication: basic
+    value_template: >-
+          {% if value_json.on == true %} on
+          {% else %} off
+          {% endif %}
+  - platform: dahua_vto
+    unique_id: door_bell_status
+    name: Sonerie
+    host: 192.168.100.66
+    username: admin
+    password: sigma2000
+    scan_interval: 5
+
+  - platform: template
+    sensors:
+      power_in_battery:
+        friendly_name: Putere Incarcare Baterie
+        unique_id: power_in_battery
+        unit_of_measurement: W
+        device_class: power
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_battery_power')) %}
+          {% if power > 0 %} {{ power }}
+          {% else %} {{ 0 }}
+          {% endif %}
+      power_out_battery:
+        friendly_name: Putere Descarcare Baterie
+        unique_id: power_out_battery
+        unit_of_measurement: W
+        device_class: power
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_battery_power')) %}
+          {% if power < 0 %} {{ power | abs }}
+          {% else %} {{ 0 }}
+          {% endif %}
+      power_in_grid:
+        friendly_name: Putere In Retea
+        unique_id: power_in_grid
+        unit_of_measurement: W
+        device_class: power
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_grid_l1')) %}
+          {% if power < 0 %} {{ power | abs }}
+          {% else %} {{ 0 }}
+          {% endif %}
+      power_out_grid:
+        friendly_name: Putere Din Retea
+        unique_id: power_out_grid
+        unit_of_measurement: W
+        device_class: power
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_grid_l1')) %}
+          {% if power > 0 %} {{ power }}
+          {% else %} {{ 0 }}
+          {% endif %}
+  - platform: integration
+    source: sensor.pv_power
+    name: Energie Produsa
+    unique_id: energy_produced
+    unit_prefix: k
+  - platform: integration
+    source: sensor.power_in_battery
+    name: Energie Incarcare Baterie
+    unique_id: energy_in_battery
+    unit_prefix: k
+  - platform: integration
+    source: sensor.power_out_battery
+    name: Energie Descarcare Baterie
+    unique_id: energy_out_battery
+    unit_prefix: k
+  - platform: integration
+    source: sensor.power_in_grid
+    name: Energie In Retea
+    unique_id: energy_in_grid
+    unit_prefix: k
+  - platform: integration
+    source: sensor.power_out_grid
+    name: Energie Din Retea
+    unique_id: energy_out_grid
+    unit_prefix: k
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+rest_command:
+  lumina_stalp_gradina_set:
+    url: http://192.168.100.80/relay/2
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  pompa_gradina_set:
+    url: http://192.168.100.80/relay/1
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  stropitoare_fata_1_set:
+    url: http://192.168.100.82/relay/2
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  stropitoare_fata_2_set:
+    url: http://192.168.100.82/relay/1
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  stropitoare_spate_1_set:
+    url: http://192.168.100.81/relay/3
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  stropitoare_spate_2_set:
+    url: http://192.168.100.81/relay/2
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  stropitoare_spate_3_set:
+    url: http://192.168.100.81/relay/1
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  stropitoare_spate_4_set:
+    url: http://192.168.100.81/relay/4
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+  stropitoare_spate_5_set:
+    url: http://192.168.100.81/relay/5
+    method: PUT
+    username: user
+    password: !secret rest_password
+    content_type: application/json; charset=utf-8
+    payload: >-
+          {% if set == true %} {"on": true}
+          {% else %} {"on": false}
+          {% endif %}
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+light:
+  - platform: template
+    lights:
+      lumina_stalp_gradina:
+        unique_id: lumina_stalp_gradina
+        friendly_name: Lumina Stalp Gradina
+        value_template: "{{ states('sensor.lumina_stalp_gradina_status') }}"
+        turn_on:
+          - service: rest_command.lumina_stalp_gradina_set
+            data:
+              set: on
+          - service: homeassistant.update_entity
+            entity_id: sensor.lumina_stalp_gradina_status
+        turn_off:
+          - service: rest_command.lumina_stalp_gradina_set
+            data:
+              set: off
+          - service: homeassistant.update_entity
+            entity_id: sensor.lumina_stalp_gradina_status
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+switch:
+  - platform: template
+    switches:
+      pompa:
+        unique_id: pompa_gradina
+        friendly_name: Pompa
+        value_template: "{{ states('sensor.pompa_gradina_status') }}"
+        turn_on:
+          - service: rest_command.pompa_gradina_set
+            data:
+              set: on
+          - service: homeassistant.update_entity
+            entity_id: sensor.pompa_gradina_status
+        turn_off:
+          - service: rest_command.pompa_gradina_set
+            data:
+              set: off
+          - service: homeassistant.update_entity
+            entity_id: sensor.pompa_gradina_status
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+timer:
+  door_bell_lock:
+    name: Poarta
+    icon: mdi:timer
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+lock:
+  - platform: template
+    name: Poarta
+    unique_id: door_bell
+    value_template: "{{ not is_state('timer.door_bell_lock', 'active') }}"
+    optimistic: false
+    lock:
+    unlock:
+      - service: dahua_vto.open_door
+        data_template:
+          entity_id: sensor.door_bell_status
+          channel: 1
+          short_number: HA
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+logger:
+       default: info
+       logs:
+         homeassistant.components.mqtt: debug
+
+# mqtt:
+#   sensor:
+#     device:
+#       name: Test
+#       manufacturer: Nistor Gabriel
+#       model: sprinkler
+#       model_id: sprinkler
+#       serial_number: e6614103e7178d24
+#       hw_version: 1.0
+#       sw_version: 3.0
+#       identifiers:
+#         - e6614103e7178d24
+#       configuration_url: http://192.168.100.76
+
+# mqtt:
+#   sensor:
+#     - name: Wifi Signal
+#       state_topic: device/e6614103e7178d24/stats
+#       unit_of_measurement: '%'
+#       value_template: "{{ value_json.wifiSignal }}"
+#       unique_id: e6614103e7178d24-wifiSignal
+#       entity_category: diagnostic
+#       icon: mdi:wifi-strength-2
+#       availability_topic: device/e6614103e7178d24/status
+#       payload_available: online
+#       payload_not_available: offline
+#       device:
+#         name: Sprinkler
+#         manufacturer: Nistor Gabriel,
+#         model: Sprinkler with 2 switches,
+#         model_id: sprinkler.2,
+#         serial_number: e6614103e7178d24,
+#         hw_version: 1.0,
+#         sw_version: 1.0,
+#         identifiers:
+#           - e6614103e7178d24
+#         configuration_url: http://192.168.100.76
+
+#     - name: Free Memory
+#       state_topic: device/e6614103e7178d24/stats
+#       unit_of_measurement: 'Kb'
+#       value_template: "{{ (value_json.memoryFree | float / 1024) | round(2) }}"
+#       unique_id: e6614103e7178d24-memoryFree
+#       entity_category: diagnostic
+#       icon: mdi:memory
+#       availability_topic: device/e6614103e7178d24/status
+#       payload_available: online
+#       payload_not_available: offline
+#       device:
+#         identifiers:
+#           - e6614103e7178d24
+
+#     - name: Used Memory
+#       state_topic: device/e6614103e7178d24/stats
+#       unit_of_measurement: 'Kb'
+#       value_template: "{{ (value_json.memoryUsed | float / 1024) | round(2) }}"
+#       unique_id: e6614103e7178d24-memoryUsed
+#       entity_category: diagnostic
+#       icon: mdi:memory
+#       availability_topic: device/e6614103e7178d24/status
+#       payload_available: online
+#       payload_not_available: offline
+#       device:
+#         identifiers:
+#           - e6614103e7178d24
+
+#     - name: Free Flash
+#       state_topic: device/e6614103e7178d24/stats
+#       unit_of_measurement: 'Kb'
+#       value_template: "{{ (value_json.flashFree | float / 1024) | round(2) }}"
+#       unique_id: e6614103e7178d24-flashFree
+#       entity_category: diagnostic
+#       icon: mdi:harddisk
+#       availability_topic: device/e6614103e7178d24/status
+#       payload_available: online
+#       payload_not_available: offline
+#       device:
+#         identifiers:
+#           - e6614103e7178d24
+
+#     - name: Used Flash
+#       state_topic: device/e6614103e7178d24/stats
+#       unit_of_measurement: 'Kb'
+#       value_template: "{{ (value_json.flashUsed | float / 1024) | round(2) }}"
+#       unique_id: e6614103e7178d24-flashUsed
+#       entity_category: diagnostic
+#       icon: mdi:harddisk
+#       availability_topic: device/e6614103e7178d24/status
+#       payload_available: online
+#       payload_not_available: offline
+#       device:
+#         identifiers:
+#           - e6614103e7178d24
+
+#     - name: On Since
+#       state_topic: device/e6614103e7178d24/stats
+#       device_class: timestamp
+#       value_template: "{{ as_datetime(now() - timedelta(seconds=value_json.uptime|int)) }}"
+#       unique_id: e6614103e7178d24-uptime
+#       entity_category: diagnostic
+#       icon: mdi:clock-outline
+#       availability_topic: device/e6614103e7178d24/status
+#       payload_available: online
+#       payload_not_available: offline
+#       device:
+#         identifiers:
+#           - e6614103e7178d24
+
+
+

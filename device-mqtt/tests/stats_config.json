@@ -1,0 +1,28 @@
+{
+  "@template": {
+    "state_topic": "device/%(id)s/stats",
+    "entity_category": "diagnostic",
+    "availability_topic": "device/%(id)s/status",
+    "payload_available": "online",
+    "payload_not_available": "offline",
+    "device": {
+      "identifiers": [
+        "%(id)s"
+      ]
+    }
+  },
+  "homeassistant/sensor/%(id)s/wifiSignal/config": {
+    "name": "Wifi Signal",
+    "unit_of_measurement": "%%",
+    "value_template": "{{ value_json.wifiSignal }}",
+    "unique_id": "%(id)s-wifiSignal",
+    "icon": "mdi:wifi-strength-2"
+  },
+  "homeassistant/sensor/%(id)s/memoryFree/config": {
+    "name": "Free Memory",
+    "unit_of_measurement": "Kb",
+    "value_template": "{{ (value_json.memoryFree | float / 1024) | round(2) }}",
+    "unique_id": "%(id)s-memoryFree",
+    "icon": "mdi:memory"
+  }
+}

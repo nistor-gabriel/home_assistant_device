@@ -1,0 +1,230 @@
+
+# modbus:
+#   - name: victron
+#     type: tcp
+#     host: 192.168.100.91  # use the IP address of your CCGX
+#     port: 502
+#     sensors:
+#     - name: Consum Total
+#       unique_id: power_total_consumption
+#       unit_of_measurement: W
+#       slave: 100 #HUB
+#       address: 817 #AC Consumption L1
+#       data_type: uint16
+#       scan_interval: 5
+#       device_class: power
+#     - name: Consum Retea
+#       unique_id: power_grid_consumption
+#       unit_of_measurement: W
+#       slave: 100 #HUB
+#       address: 820 #GridL1 Net
+#       data_type: int16
+#       scan_interval: 5
+#       device_class: power
+#     - name: Baterie Incarcare
+#       unique_id: power_battery_charge
+#       unit_of_measurement: "%"
+#       slave: 100 #HUB
+#       address: 843
+#       data_type: uint16
+#       scale: 1
+#       precision: 0
+#     - name: Baterie
+#       unique_id: power_battery_consumption
+#       unit_of_measurement: W
+#       slave: 100  #HUB
+#       address: 842
+#       data_type: int16
+#       scale: 1.0
+#       precision: 0
+#       device_class: power
+#     - name: Panouri
+#       unique_id: power_panels
+#       unit_of_measurement: W
+#       slave: 100 #HUB
+#       address: 850
+#       data_type: uint16
+#       device_class: power
+
+# event:
+#   - alias: Door Bell All Events
+#     mode: queued
+#     trigger:
+#       - platform: event
+#         event_type: dahua_vto
+#     action:
+#       - service: persistent_notification.create
+#         data:
+#           title: "{{ trigger.event.data.Code if trigger.event.data.Code is defined else 'Unknown Code' }}"
+#           message: "{{ trigger.event.data }}"
+
+#   - alias: Door Bell Command Result
+#     mode: queued
+#     trigger:
+#       - platform: event
+#         event_type: dahua_vto
+#     condition:
+#       - condition: template
+#         value_template: "{{ trigger.event.data.method is defined }}"
+#     action:
+#       - service: persistent_notification.create
+#         data:
+#           title: "{{ trigger.event.data.method }}"
+#           message: "{{ trigger.event.data }}"
+
+#   - alias: Door Bell
+#     mode: queued
+#     trigger:
+#       - platform: event
+#         event_type: dahua_vto
+#         event_data:
+#           Code: BackKeyLight
+#     action:
+#       - choose:
+#           - conditions: >
+#               {{ trigger.event.data.Data.State | int in [0, 1, 2, 5, 6] }}
+#             sequence:
+#               - service: persistent_notification.create
+#                 data:
+#                   title: "{{ 'Door Bell Ring' if trigger.event.data.Data.State | int in [1, 2] else 'Door Bell No Ring' }}"
+#                   message: "{{ trigger.event.data }}"
+#           - conditions: >
+#               {{ trigger.event.data.Data.State | int == 8 }}
+#             sequence:
+#               - service: timer.start
+#                 data:
+#                   entity_id: timer.door_bell_lock
+#                   duration: 00:00:02 # VTO Unlock Period
+#               - service: persistent_notification.create
+#                 data:
+#                   title: Unlock
+#                   message: "{{ trigger.event.data }}"
+#           - conditions: >
+#               {{ trigger.event.data.Data.State | int == 9 }}
+#             sequence:
+#               - service: persistent_notification.create
+#                 data:
+#                   title: Unlock failed
+#                   message: "{{ trigger.event.data }}"
+#           - conditions: >
+#               {{ trigger.event.data.Data.State | int == 11 }}
+#             sequence:
+#               - service: persistent_notification.create
+#                 data:
+#                   title: Device rebooted
+#                   message: "{{ trigger.event.data }}"
+#         default:
+#           - service: persistent_notification.create
+#             data:
+#               title: "Unknown state {{ trigger.event.data.Data.State | int }}"
+#               message: "{{ trigger.event.data }}"
+
+
+
+# logger:
+#        default: info
+#        logs:
+#          homeassistant.components.rest: debug
+
+
+  # - platform: template
+  #   switches:
+  #     stropitoare_fata_1:
+  #       unique_id: stropitoare_fata_1_switch
+  #       friendly_name: Stropitoare fata 1
+  #       value_template: "{{ states('sensor.stropitoare_fata_1_status') }}"
+  #       turn_on:
+  #         - service: rest_command.stropitoare_fata_1_set
+  #           data:
+  #             set: on
+  #         - service: homeassistant.update_entity
+  #           entity_id: sensor.stropitoare_fata_1_status
+  #       turn_off:
+  #         - service: rest_command.stropitoare_fata_1_set
+  #           data:
+  #             set: off
+  #         - service: homeassistant.update_entity
+  #           entity_id: sensor.stropitoare_fata_1_status
+
+
+#       pompa:
+#             unique_id: pompa_gradina
+#             friendly_name: Pompa
+#             value_template: "{{ states('sensor.pompa_gradina_status') }}"
+#             turn_on:
+#               - service: rest_command.pompa_gradina_on
+#               - service: homeassistant.update_entity
+#                 entity_id: sensor.pompa_gradina_status
+#             turn_off:
+#               - service: rest_command.pompa_gradina_off
+#               - service: homeassistant.update_entity
+#                 entity_id: sensor.pompa_gradina_status
+      # stropitoare_fata_1:
+      #      unique_id: stropitoare_fata_1
+      #      friendly_name: Stropitoare fata 1
+      #      value_template: "{{ states('sensor.stropitoare_fata_1_status') }}"
+      #      turn_on:
+      #       - service: rest_command.stropitoare_fata_1_set
+      #         data:
+      #           set: on
+      #       - service: homeassistant.update_entity
+      #         entity_id: sensor.stropitoare_fata_1_status
+      #      turn_off:
+      #       - service: rest_command.stropitoare_fata_1_set
+      #         data:
+      #           set: on
+      #       - service: homeassistant.update_entity
+      #         entity_id: sensor.stropitoare_fata_1_status
+
+
+  # - platform: group
+  #   name: Office Lights
+  #   entities:
+  #     - light.shellydimmer2_fedcba0123456 # Office Light
+  #     - light.office_iris_amp # Office Iris Amp
+  #     - light.office_iris_window # Office Iris WIndow
+  #     - light.hue_color_lamp_1 # Office Lamp
+  #     - light.office_led_strip # Office LED Strip
+
+# switch:
+  # - platform: rest
+  #   resource: http://192.168.100.80/relay/2
+  #   username: user
+  #   password: sigma2000
+  #   name: Lumina Stalp Gradina Status
+  #   body_on: on
+  #   body_off: off
+  #   is_on_template: "{{ value_json.on == true }}"
+  # - platform: template
+  #   switches:
+  #     lumina_stalp_gradina:
+  #          friendly_name: "Lumina Stalp Gradina"
+  #          value_template: "{{ is_state('switch.my_device_template', 'on') }}" # Assuming you named your template switch 'my_device_template'
+  #          turn_on:
+  #            service: rest_command.lumina_stalp_gradina_on
+  #          turn_off:
+  #            service: rest_command.lumina_stalp_gradina_off
+
+
+# switch:
+#   - platform: rest
+#     name: Lumina Gradina
+#     resource: http://192.168.100.80/relay/2
+#     username: user
+#     password: sigma2000
+#     is_on_template: "{{ value_json.on }}"
+#     body_on: '{"on":true}'
+#     body_off: '{"on":false}'
+#     headers:
+#       Content-Type: application/json
+
+# rest:
+#   - resource: http://192.168.100.80/stats
+#     scan_interval: 15
+#     username: user
+#     password: sigma2000
+#     authentication: basic
+#     sensor:
+#       - name: Used mem
+#         value_template: "{{ value_json.memoryAllocated }}"
+

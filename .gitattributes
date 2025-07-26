@@ -1,0 +1,5 @@
+*.gz binary
+*.zip binary
+*.apk binary
+*.xapk binary
+*.uf2 binary

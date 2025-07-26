@@ -1,0 +1,55 @@
+{
+  "@template": {
+    "state_topic": "device/%(id)s/stats",
+    "entity_category": "diagnostic",
+    "availability_topic": "device/%(id)s/status",
+    "payload_available": "online",
+    "payload_not_available": "offline"
+  },
+  "homeassistant/sensor/%(id)s/wifiSignal/config": {
+    "name": "Wifi Signal",
+    "unit_of_measurement": "%%",
+    "value_template": "{{ value_json.wifiSignal }}",
+    "unique_id": "%(id)s-wifiSignal",
+    "icon": "mdi:wifi-strength-2"
+  },
+  "homeassistant/sensor/%(id)s/memoryFree/config": {
+    "name": "Free Memory",
+    "unit_of_measurement": "Kb",
+    "value_template": "{{ (value_json.memoryFree | float / 1024) | round(2) }}",
+    "unique_id": "%(id)s-memoryFree",
+    "icon": "mdi:memory"
+  },
+  "homeassistant/sensor/%(id)s/memoryUsed/config": {
+    "name": "Used Memory",
+    "state_topic": "device/%(id)s/stats",
+    "unit_of_measurement": "Kb",
+    "value_template": "{{ (value_json.memoryUsed | float / 1024) | round(2) }}",
+    "unique_id": "%(id)s-memoryUsed",
+    "icon": "mdi:memory"
+  },
+  "homeassistant/sensor/%(id)s/flashFree/config": {
+    "name": "Free Flash",
+    "state_topic": "device/%(id)s/stats",
+    "unit_of_measurement": "Kb",
+    "value_template": "{{ (value_json.flashFree | float / 1024) | round(2) }}",
+    "unique_id": "%(id)s-flashFree",
+    "icon": "mdi:harddisk"
+  },
+  "homeassistant/sensor/%(id)s/flashUsed/config": {
+    "name": "Used Flash",
+    "state_topic": "device/%(id)s/stats",
+    "unit_of_measurement": "Kb",
+    "value_template": "{{ (value_json.flashUsed | float / 1024) | round(2) }}",
+    "unique_id": "%(id)s-flashUsed",
+    "icon": "mdi:harddisk"
+  },
+  "homeassistant/sensor/%(id)s/uptime/config": {
+    "name": "On Since",
+    "state_topic": "device/%(id)s/stats",
+    "device_class": "timestamp",
+    "value_template": "{{ as_datetime(now() - timedelta(seconds=value_json.uptime|int)) }}",
+    "unique_id": "%(id)s-uptime",
+    "icon": "mdi:clock-outline"
+  }
+}

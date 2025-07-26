@@ -1,0 +1,15 @@
+{
+  "device": {
+    "name": "%(name)s",
+    "manufacturer": "Nistor Gabriel",
+    "model": "%(api_type)s",
+    "model_id": "%(api_type)s",
+    "serial_number": "%(id)s",
+    "hw_version": "1.0",
+    "sw_version": "%(version)s",
+    "identifiers": [
+      "%(id)s"
+    ],
+    "configuration_url": "http://%(ip)s"
+  }
+}
