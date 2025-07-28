@@ -17,8 +17,7 @@ except ImportError:
 class Wlan:
 
     def __init__(self, config: Config, name: ConfigEntry, loop: asyncio.AbstractEventLoop, ssid: str = None,
-                 wpass: str = None, on_connect: typ.Callable[[bool], typ.Coroutine] = None,
-                 on_disconnect: typ.Callable[[], typ.Coroutine] = None):
+                 wpass: str = None):
         self._name = name
         self._loop = loop
         self._ssid = config.create('wifi_ssid', ssid)
@@ -28,8 +27,8 @@ class Wlan:
         self._conn_pass: str | None = None
         self._ifconfig: typ.Union[(str, str, str, str), None] = None
 
-        self._on_connect = on_connect
-        self._on_disconnect = on_disconnect
+        self.on_connect = util.Listeners()
+        self.on_disconnect = util.Listeners()
         self.wlan: network.WLAN = None
 
     def get_ssid(self):
@@ -88,6 +87,14 @@ class Wlan:
     def setup(self):
         self._loop.create_task(self._run())
 
+    def _on_connect(self, has_internet: bool):
+        for listener in self.on_connect.iter():
+            listener(has_internet)
+
+    def _on_disconnect(self):
+        for listener in self.on_disconnect.iter():
+            listener()
+
     # noinspection PyBroadException
     async def _run(self):
         while True:
@@ -123,8 +130,7 @@ class Wlan:
 
                     self._conn_ssid = self._conn_pass = None
 
-                if self._on_connect:
-                    asyncio.get_event_loop().create_task(self._on_connect(True))
+                self._on_connect(True)
 
                 reconnect = False
                 while True:
@@ -142,8 +148,7 @@ class Wlan:
                         self.wlan.disconnect()
                         self.wlan.active(False)
                         self.wlan = None
-                        if self._on_disconnect:
-                            asyncio.get_event_loop().create_task(self._on_disconnect())
+                        self._on_disconnect()
                         break
                     await asyncio.sleep(10)
 
@@ -153,8 +158,7 @@ class Wlan:
                 self.wlan.config(ssid=self._name.get(), password='sigma2000',
                                  security=network.WLAN.SEC_WPA_WPA2)
                 print('connected on AP:', self.wlan.ifconfig()[0])
-                if self._on_connect:
-                    asyncio.get_event_loop().create_task(self._on_connect(False))
+                self._on_connect(False)
 
                 ip = self.wlan.ifconfig()[0]
                 udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -166,8 +170,7 @@ class Wlan:
                         self.wlan.disconnect()
                         self.wlan.active(False)
                         self.wlan = None
-                        if self._on_disconnect:
-                            asyncio.get_event_loop().create_task(self._on_disconnect())
+                        self._on_disconnect()
                         break
                     try:
                         data, addr = udps.recvfrom(1024)

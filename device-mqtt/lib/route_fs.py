@@ -1,6 +1,6 @@
 # noinspection PyUnresolvedReferences
 import uos as os
-from microdot import Microdot, Request
+from microdot import Microdot, Request, send_file
 from auth import Auth
 
 
@@ -30,10 +30,7 @@ def install_fs(app: Microdot, auth: Auth):
                 'path': path,
                 'items': items,
             }
-        f = open(path)
-        content = f.read()
-        f.close()
-        return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+        return send_file(path)
 
     @app.post('/fs/<re:.*:path>')
     @auth.with_auth

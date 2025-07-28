@@ -1,5 +1,4 @@
 from microdot import Microdot, Request
-from wlan import Wlan
 from mqtt_repo import MQTTRepo
 from device import Device
 from auth import Auth
@@ -13,7 +12,7 @@ except ImportError:
     import uasyncio as asyncio
 
 
-def install_stats(app: Microdot, auth: Auth, wlan: Wlan, mqtt: MQTTRepo, device: Device,
+def install_stats(app: Microdot, auth: Auth, mqtt: MQTTRepo, device: Device,
                   loop: asyncio.AbstractEventLoop, interval_refresh: float = 60):
     gc.enable()
     data = {}
@@ -29,7 +28,6 @@ def install_stats(app: Microdot, auth: Auth, wlan: Wlan, mqtt: MQTTRepo, device:
             data.update(
                 time=util.format_date(time.localtime()),
                 uptime=util.uptime(),
-                wifiSignal=wlan.wifi_signal(),
                 memoryFree=gc.mem_free(),
                 memoryUsed=gc.mem_alloc(),
                 flashFree=free,

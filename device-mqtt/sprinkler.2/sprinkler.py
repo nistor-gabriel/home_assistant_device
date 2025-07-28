@@ -8,6 +8,7 @@ from route_stats import install_stats
 from route_fs import install_fs
 from route_mqtt import install_mqtt
 from route_api import install_api
+from route_wlan import install_wlan
 import util
 
 try:
@@ -20,34 +21,37 @@ app = Microdot()
 Response.default_content_type = 'application/json; charset=utf-8'
 
 
-async def on_connect(has_internet: bool):
+def on_connect(has_internet: bool):
     if has_internet:
         loop.create_task(util.synchronize_time())
     loop.create_task(app.start_server(port=80, debug=False))
-    loop.create_task(mqtt.start())
     print('server started')
 
 
-async def on_disconnect():
+def on_disconnect():
     app.shutdown()
-    mqtt.shutdown()
     print('server stopped')
 
 
 config = Config(filename='config.json', loop=loop)
 name = config.create('name', 'Sprinkler')
-wlan = Wlan(config=config, name=name, on_connect=on_connect, on_disconnect=on_disconnect, loop=loop)
+wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
-mqtt = MQTTRepo(config=config)
+mqtt = MQTTRepo(config=config, wlan=wlan)
 device = Device(config=config, mqtt=mqtt, wlan=wlan, name=name, api_type='sprinkler', version='3.0')
+
+wlan.on_connect.add(on_connect)
+wlan.on_disconnect.add(on_disconnect)
 
 config.setup()
 wlan.setup()
 auth.setup()
+mqtt.setup()
 
 install_mqtt(app=app, auth=auth, mqtt=mqtt)
 install_api(app=app, auth=auth, device=device, loop=loop)
-install_stats(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
+install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
+install_wlan(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
 install_fs(app=app, auth=auth)
 
 

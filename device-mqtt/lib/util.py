@@ -80,6 +80,12 @@ def is_str(value, min_len: int | None = None, max_len: int | None = None):
     return True
 
 
+def is_bool(value):
+    if value is True or value is False:
+        return True
+    return False
+
+
 def is_ip(value):
     if not isinstance(value, str):
         return False

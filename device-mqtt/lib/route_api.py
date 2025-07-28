@@ -37,7 +37,7 @@ def install_api(app: Microdot, auth: Auth, device: Device, loop: asyncio.Abstrac
 
         new_pass = util.get_body_str(request.json, 'password')
         if new_pass is not None:
-            if new_pass is util.INVALID or not auth.set_user_password(new_pass):
+            if new_pass is util.INVALID or not auth.set_password(new_pass):
                 return {'password': 'invalid'}, 400
 
     @app.post('/api')
