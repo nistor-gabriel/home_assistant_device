@@ -1,5 +1,7 @@
-# noinspection PyUnresolvedReferences
-import uos as os
+try:
+    import uos as os
+except ImportError:
+    import os
 from microdot import Microdot, Request, send_file
 from auth import Auth
 

@@ -37,6 +37,7 @@ def install_wlan(app: Microdot, auth: Auth, wlan: Wlan, mqtt: MQTTRepo, device: 
                 subnet=wlan.get_subnet(),
                 dns=wlan.get_dns(),
                 signal=wlan.wifi_signal(),
+                gateway=wlan.get_gateway(),
             )
             mqtt.put_obj('device/%(id)s/wlan', data)
             try:
@@ -45,8 +46,6 @@ def install_wlan(app: Microdot, auth: Auth, wlan: Wlan, mqtt: MQTTRepo, device: 
                 pass
             else:
                 event.clear()
-
-            await asyncio.sleep(interval_refresh)
 
     device.add_config('wlan_config.json')
     loop.create_task(run())

@@ -14,9 +14,11 @@ def install_mqtt(app: Microdot, auth: Auth, mqtt: MQTTRepo):
     @auth.with_auth
     def handle_get_mqtt(_request: Request):
         return {
-            'server': mqtt.get_mqtt_server(),
-            'port': mqtt.get_mqtt_port(),
-            'ssl': mqtt.get_mqtt_ssl(),
+            'server': mqtt.get_server(),
+            'port': mqtt.get_port(),
+            'ssl': mqtt.get_ssl(),
+            'clientId': mqtt.get_client_id(),
+            'defaultClientId': mqtt.get_default_client_id(),
             'isConnected': mqtt.is_connected(),
         }
 
@@ -28,7 +30,8 @@ def install_mqtt(app: Microdot, auth: Auth, mqtt: MQTTRepo):
         ssl = util.get_body_bool(request.json, 'ssl')
         user = util.get_body_str(request.json, 'user')
         password = util.get_body_str(request.json, 'password')
+        client_id = util.get_body_str(request.json, 'clientId')
 
-        issue = mqtt.set_mqtt_connection(server, port, ssl, user, password)
+        issue = mqtt.set_mqtt_connection(server, port, ssl, user, password, client_id)
         if issue:
             return issue, 400

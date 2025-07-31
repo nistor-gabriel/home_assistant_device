@@ -1,20 +1,21 @@
 import React from 'react';
-import { X, Wifi, Radio, Settings, Home } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /* ========================================================================== */
+
+export interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
 export interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   activeSection: string;
   setActiveSection: (section: string) => void;
-}
-
-export interface MenuItem {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  menuItems: MenuItem[];
 }
 
 /* ========================================================================== */
@@ -23,14 +24,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   sidebarOpen, 
   setSidebarOpen, 
   activeSection, 
-  setActiveSection 
+  setActiveSection ,
+  menuItems,
 }) => {
-  const menuItems: MenuItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'wifi', label: 'WiFi Configuration', icon: Wifi },
-    { id: 'mqtt', label: 'MQTT Connection', icon: Radio },
-    { id: 'settings', label: 'Settings', icon: Settings },
-  ];
 
   return (
     <div className={`

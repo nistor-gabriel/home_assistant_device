@@ -4,23 +4,26 @@ import { Button } from '@/components/ui/button';
 
 /* ========================================================================== */
 
+export interface MenuItem {
+  id: string;
+  label: string;
+}
+
 export interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
   activeSection: string;
+  menuItems: MenuItem[];
 }
 
 /* ========================================================================== */
 
-const Header: React.FC<HeaderProps> = ({ setSidebarOpen, activeSection }) => {
+const Header: React.FC<HeaderProps> = ({ setSidebarOpen, activeSection, menuItems }) => {
   const getSectionTitle = (section: string): string => {
-    switch (section) {
-      case 'wifi':
-        return 'WiFi Configuration';
-      case 'mqtt':
-        return 'MQTT Connection';
-      default:
-        return section.charAt(0).toUpperCase() + section.slice(1);
+    const selected = menuItems.find((menu) => menu.id === section);
+    if(!selected) {
+      return section.charAt(0).toUpperCase() + section.slice(1);
     }
+    return selected.label;
   };
 
   return (

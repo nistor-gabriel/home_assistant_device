@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
-import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
-import Dashboard from '@/components/Dashboard';
-import WiFiConfig from '@/components/WiFiConfig';
-import MQTTConfig from '@/components/MQTTConfig';
-import Settings from '@/components/Settings';
+import Sidebar from '@/components/sidebar';
+import Header from '@/components/header';
+import { menuItems } from './setup';
 
+/* ========================================================================== */
+
+export interface Entry {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  node: React.ReactNode;
+}
 
 /* ========================================================================== */
 
@@ -14,16 +19,11 @@ const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('dashboard');
 
   const renderContent = (): React.ReactNode => {
-    switch (activeSection) {
-      case 'wifi':
-        return <WiFiConfig />;
-      case 'mqtt':
-        return <MQTTConfig />;
-      case 'settings':
-        return <Settings />;
-      default:
-        return <Dashboard />;
+    const selected = menuItems.find((menu) => menu.id === activeSection);
+    if(!selected) {
+      return null;
     }
+    return selected.node;
   };
 
   return (
@@ -33,6 +33,7 @@ const App: React.FC = () => {
         setSidebarOpen={setSidebarOpen}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
+        menuItems={menuItems}
       />
 
       {/* Mobile overlay */}
@@ -48,6 +49,7 @@ const App: React.FC = () => {
         <Header 
           setSidebarOpen={setSidebarOpen}
           activeSection={activeSection}
+          menuItems={menuItems}
         />
         
         <main className="flex-1 overflow-auto p-6">

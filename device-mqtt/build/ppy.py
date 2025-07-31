@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 from pathlib import Path
 from mpy_cross import run
 from ampy.cli import cli
@@ -22,10 +23,10 @@ if __name__ == '__main__':
     path_src_arg = Path(args[1][0])
     path_src = path_src_arg.resolve().parent.joinpath(path_src_arg.stem + '.mpy').absolute()
 
-    path_root = Path('.').resolve().absolute()
     path_target_arg = Path(args[2][0])
     path_target = path_target_arg.parent.joinpath(path_target_arg.stem + '.mpy')
-    path_dist = path_root.joinpath('__dist__').joinpath(path_target).resolve().absolute()
+    root_dist = Path(os.environ['dist_path']).resolve().absolute()
+    path_dist = root_dist.joinpath(path_target).resolve().absolute()
 
     path_dist.parent.mkdir(parents=True, exist_ok=True)
     path_src.rename(path_dist)

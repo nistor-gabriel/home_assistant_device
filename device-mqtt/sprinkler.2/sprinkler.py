@@ -9,6 +9,7 @@ from route_fs import install_fs
 from route_mqtt import install_mqtt
 from route_api import install_api
 from route_wlan import install_wlan
+from route_ui import install_ui
 import util
 
 try:
@@ -37,22 +38,23 @@ config = Config(filename='config.json', loop=loop)
 name = config.create('name', 'Sprinkler')
 wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
-mqtt = MQTTRepo(config=config, wlan=wlan)
+mqtt = MQTTRepo(config=config, wlan=wlan, loop=loop)
 device = Device(config=config, mqtt=mqtt, wlan=wlan, name=name, api_type='sprinkler', version='3.0')
 
 wlan.on_connect.add(on_connect)
 wlan.on_disconnect.add(on_disconnect)
 
 config.setup()
-wlan.setup()
 auth.setup()
 mqtt.setup()
+wlan.setup()
 
 install_mqtt(app=app, auth=auth, mqtt=mqtt)
 install_api(app=app, auth=auth, device=device, loop=loop)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
 install_wlan(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
 install_fs(app=app, auth=auth)
+install_ui(app=app, auth=auth)
 
 
 def run():

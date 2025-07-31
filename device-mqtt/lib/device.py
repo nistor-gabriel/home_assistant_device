@@ -28,12 +28,6 @@ class Device:
         self._api_type = api_type
         self._version = version
         self._configs: [str] = []
-        self._vars = {
-            'name': self._name.get(),
-            'api_type': self._api_type,
-            'version': self._version,
-            'id': self._mqtt.id,
-        }
 
         def publish_device_config():
             self.publish_device_config()
@@ -56,7 +50,6 @@ class Device:
         if not util.is_str(name, min_len=3, max_len=50):
             return False
         self._name.set(name)
-        self._vars['name'] = name
         self.publish_device_config()
         return True
 
@@ -72,15 +65,22 @@ class Device:
     def publish_device_config(self):
         ip = self._wlan.get_ip()
         ip = ip if ip else '?'
-        self._vars['ip'] = ip
+
+        vars = {
+            'name': self._name.get(),
+            'api_type': self._api_type,
+            'version': self._version,
+            'id': self._mqtt.get_active_client_id(),
+            'ip': ip,
+        }
 
         with open('device_template.json') as json_file:
             template = json.load(json_file)
 
         for file in self._configs:
-            self._put_config(file, template)
+            self._put_config(file, template, vars)
 
-    def _put_config(self, file: str, template: typ.Dict[str, typ.Any] | None = None):
+    def _put_config(self, file: str, template: typ.Dict[str, typ.Any], vars: typ.Dict[str, str]):
         with open(file) as json_file:
             data = json.load(json_file)
         tpl = data.get('@template')
@@ -94,6 +94,6 @@ class Device:
             msg = dict(tpl)
             msg.update(data[topic])
             msg_str = json.dumps(msg)
-            topic = topic % self._vars
-            msg_str = msg_str % self._vars
+            topic = topic % vars
+            msg_str = msg_str % vars
             self._mqtt.put(topic, msg_str)
