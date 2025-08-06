@@ -2,8 +2,14 @@ try:
     import uos as os
 except ImportError:
     import os
+try:
+    import ubinascii
+except ImportError:
+    # noinspection SpellCheckingInspection
+    import binascii as ubinascii
 from microdot import Microdot, Request, send_file
 from auth import Auth
+import hashlib
 
 
 def install_fs(app: Microdot, auth: Auth):
@@ -23,11 +29,15 @@ def install_fs(app: Microdot, auth: Auth):
             for name in files:
                 fpath = '/{}'.format(name) if path == '/' else '{}/{}'.format(path, name)
                 st = os.stat(fpath)
-                items.append({
+                is_dir = True if st[0] & 0x4000 else False
+                item = {
                     'name': name,
                     'path': fpath,
-                    'isDir': True if st[0] & 0x4000 else False,
-                })
+                    'isDir': is_dir,
+                }
+                if not is_dir:
+                    item['hash'] = hash_file(fpath)
+                items.append(item)
             return {
                 'path': path,
                 'items': items,
@@ -95,3 +105,13 @@ def install_fs(app: Microdot, auth: Auth):
             except OSError:
                 os.mkdir(cpath)
         return True
+
+    def hash_file(path: str):
+        sha1 = hashlib.sha1()
+        with open(path, 'rb') as f:
+            while True:
+                data = f.read(1024)
+                if not data:
+                    break
+                sha1.update(data)
+        return ubinascii.hexlify(sha1.digest())

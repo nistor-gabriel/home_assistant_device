@@ -1,4 +1,5 @@
 import json
+import os
 try:
     import typ
 
@@ -49,6 +50,7 @@ class Config:
         self._loop.create_task(self._run())
 
     def reset(self):
+        os.remove(self._filename)
         for key in self._entries.keys():
             self._entries[key].reset()
 

@@ -1,2 +1,0 @@
-import sprinkler
-sprinkler.run()

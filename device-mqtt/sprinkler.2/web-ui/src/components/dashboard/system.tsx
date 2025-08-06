@@ -2,18 +2,20 @@ import React from 'react';
 import Moment from 'react-moment';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Settings } from 'lucide-react';
-import { useGetData, cn, ep } from '@/lib/utils'
+import { useGetData, cn, ep, useTimelyRefresh } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 /* ========================================================================== */
 
 const DashboardSystem: React.FC = () => {
-    const api = useGetData<ep.Api>(ep.PATH_API);
-    const stats = useGetData<ep.Stats>(ep.PATH_STATS);
+    const [api, refreshApi] = useGetData<ep.Api>(ep.PATH_API, 'refresh');
+    const [stats, refreshStats] = useGetData<ep.Stats>(ep.PATH_STATS, 'refresh');
     const isLoading = api.status === 'loading' || stats.status === 'loading';
     const isError = api.status === 'failed' || stats.status === 'failed';
     const isOk = api.status === 'ok' && stats.status === 'ok';
+
+    useTimelyRefresh(30, refreshApi, refreshStats);
 
     return (
         <Card>
@@ -33,7 +35,7 @@ const DashboardSystem: React.FC = () => {
                             <TableBody>
                                 {[
                                     { label: 'Now is', value: (<Moment date={stats.data?.time} parse="YYYY-MM-DDTHH:mm:ss" format="YYYY-MM-DD HH:mm:ss" />) },
-                                    { label: 'Uptime', value: (<Moment subtract={{ seconds: stats.data?.uptime || 0 }} durationFromNow />) },
+                                    { label: 'Uptime', value: (<Moment subtract={{ seconds: stats.data?.uptime || 0 }} fromNow />) },
                                     { label: 'Free RAM', value: <>{stats.data?.memoryFree ? (stats.data.memoryFree / 1024).toFixed(1) + ' Kb' : '-'}</> },
                                     { label: 'Used RAM', value: <>{stats.data?.memoryUsed ? (stats.data.memoryUsed / 1024).toFixed(1) + ' Kb' : '-'}</> },
                                     { label: 'Free Flash', value: <>{stats.data?.flashFree ? (stats.data.flashFree / 1024).toFixed(1) + ' Kb' : '-'}</> },

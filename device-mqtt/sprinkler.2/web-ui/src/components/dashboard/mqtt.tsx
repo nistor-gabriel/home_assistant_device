@@ -3,15 +3,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Radio } from 'lucide-react';
 import { useGetData, cn, ep } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 /* ========================================================================== */
 
 const DashboardMqtt: React.FC = () => {
-    const mqtt = useGetData<ep.Mqtt>(ep.PATH_MQTT);
-    const isLoading = mqtt.status === 'loading';
-    const isError = mqtt.status === 'failed';
-    const isOk = mqtt.status === 'ok';
+    const rsp = useGetData<ep.Mqtt>(ep.PATH_MQTT);
+    const isLoading = rsp.status === 'loading';
+    const isError = rsp.status === 'failed';
+    const isOk = rsp.status === 'ok';
 
     return (
         <Card>
@@ -22,9 +22,9 @@ const DashboardMqtt: React.FC = () => {
             <CardContent>
                 <div className="space-y-2">
                     {isOk ? (
-                        <p className={cn('text-sm mt-2 mb-1', mqtt.data?.isConnected ? 'text-gray-600' : 'text-red-400')}>
-                            {mqtt.data?.server ? (
-                                <>{mqtt.data?.isConnected ? 'Connected to' : 'Cannot connect to'} <b>{mqtt.data?.server}</b></>
+                        <p className={cn('text-sm mt-2 mb-1', rsp.data?.isConnected ? 'text-gray-600' : 'text-red-400')}>
+                            {rsp.data?.server ? (
+                                <>{rsp.data?.isConnected ? 'Connected to' : 'Cannot connect to'} <b>{rsp.data?.server}</b></>
                             ) : 'No server configured'}
                         </p>
                     ) : isError ? null : (
@@ -34,9 +34,9 @@ const DashboardMqtt: React.FC = () => {
                         <Table className="ml-2 w-[10%] text-nowrap">
                             <TableBody>
                                 {[
-                                    { label: 'Client Id', value: <>{mqtt.data?.clientId ? mqtt.data?.clientId : mqtt.data?.defaultClientId ? <i className="text-gray-500">{mqtt.data?.defaultClientId}</i> : '-'}</> },
-                                    { label: 'Using Port', value: <>{mqtt.data?.port === 0 ? <i className="text-gray-500">default</i> : mqtt.data?.port || '-'}</> },
-                                    { label: 'Using SSL', value: <>{mqtt.data?.ssl ? 'True' : 'False'}</> },
+                                    { label: 'Client Id', value: <>{rsp.data?.clientId ? rsp.data?.clientId : rsp.data?.defaultClientId ? <i className="text-gray-500">{rsp.data?.defaultClientId}</i> : '-'}</> },
+                                    { label: 'Using Port', value: <>{rsp.data?.port === 0 ? <i className="text-gray-500">default</i> : rsp.data?.port || '-'}</> },
+                                    { label: 'Using SSL', value: <>{rsp.data?.ssl ? 'True' : 'False'}</> },
                                 ].map(({ label, value }, key) => (
                                     <TableRow key={key}>
                                         <TableCell className="p-2 text-xs text-gray-500"><span className="mr-1">{label}</span></TableCell>

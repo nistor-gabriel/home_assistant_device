@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SpinnerBars } from '@/components/ui/shadcn-io/spinner';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { doPut, ep, useGetEffect } from '@/lib/utils';
+import { doModify, ep, useGetEffect } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -53,6 +53,7 @@ const FormSchema = z.object({
 const MQTT: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isProcessing, setProcessing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [clientIdPlaceholder, setClientIdPlaceholder] = useState<string>('');
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -82,15 +83,16 @@ const MQTT: React.FC = () => {
         defaultValue: data.clientId,
       });
       setClientIdPlaceholder('auto-generated<' + data.defaultClientId + '>');
+      setIsLoading(false);
     }
-  }, true);
+  }, 'refresh');
 
   const handleUpdate = async (data: z.infer<typeof FormSchema>) => {
     const timeout = setTimeout(() => setProcessing(true), 300);
     if (data.port === '') {
       data.port = 0 as any;
     }
-    const result = await doPut(ep.PATH_MQTT, data);
+    const result = await doModify('PUT', ep.PATH_MQTT, data);
     clearTimeout(timeout);
     setProcessing(false);
 
@@ -102,6 +104,8 @@ const MQTT: React.FC = () => {
         </AlertUpdateSuccess>
       ));
       refresh();
+      form.reset();
+      setShowPassword(false);
     } else {
       toast((<AlertUpdateFailed />));
     }
@@ -122,7 +126,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Broker Host</FormLabel>
                         <FormControl>
-                          <Input placeholder="mqtt.example.com" {...field} />
+                          <Input disabled={isLoading} placeholder="mqtt.example.com" {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -136,7 +140,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Port</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="using default port" {...field} />
+                          <Input disabled={isLoading} type="number" placeholder="using default port" {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -150,7 +154,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Username</FormLabel>
                         <FormControl>
-                          <Input placeholder="enter username" {...field} />
+                          <Input disabled={isLoading} placeholder="enter username" {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -164,7 +168,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Client ID</FormLabel>
                         <FormControl>
-                          <Input placeholder={clientIdPlaceholder} {...field} />
+                          <Input disabled={isLoading} placeholder={clientIdPlaceholder} {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -178,11 +182,12 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type={showPassword ? 'text' : 'password'} placeholder="enter password" {...field} />
+                          <Input disabled={isLoading} type={showPassword ? 'text' : 'password'} placeholder="enter password" {...field} />
                         </FormControl>
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="showPassword"
+                            disabled={isLoading}
                             checked={showPassword}
                             onCheckedChange={(checked) => setShowPassword(!!checked)}
                           />
@@ -205,6 +210,7 @@ const MQTT: React.FC = () => {
                         </div>
                         <FormControl>
                           <Checkbox
+                            disabled={isLoading}
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />

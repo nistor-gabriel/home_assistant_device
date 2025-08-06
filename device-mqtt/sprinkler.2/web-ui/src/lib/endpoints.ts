@@ -33,9 +33,40 @@ export interface Mqtt {
     isConnected: boolean; 
 }
 
+export interface FsItem {
+    name: string;
+    path: string;
+    isDir: boolean;
+    hash: string;
+}
+
+export interface Fs {
+    path: string;
+    items: FsItem[];
+}
+
+export interface SwitchItem {
+    id: number;
+    on: boolean;
+    name: string;
+    disabled: boolean;
+    onSince: string;
+    stopTimeout: number;
+}
+
+export interface Switch {
+    items: SwitchItem[];
+}
+
 /* ========================================================================== */
 
 export const PATH_API = '/api';
 export const PATH_STATS = '/stats';
 export const PATH_WLAN = '/wlan';
 export const PATH_MQTT = '/mqtt';
+export const PATH_FS = '/fs';
+export const PATH_SWITCH = '/switch';
+
+export function pathSwitchItem(sw: SwitchItem) {
+    return PATH_SWITCH + '/' + sw.id;
+}

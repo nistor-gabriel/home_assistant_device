@@ -10,8 +10,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { useGetEffect, doPut, ep } from '@/lib/utils';
+import { useGetEffect, doDelete, doModify, doPing, sleep, ep } from '@/lib/utils';
 import { AlertUpdateFailed, AlertUpdateSuccess } from '@/components/common';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 /* ========================================================================== */
 
@@ -31,6 +35,8 @@ const FormSchema = z.object({
 const Settings: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isProcessing, setProcessing] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showDialog, setShowDialog] = useState<'confirm-reset' | 'confirm-reboot' | 'failed-reset' | 'done-reset' | false>(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -39,21 +45,23 @@ const Settings: React.FC = () => {
       password: '',
     },
   });
+
   const refresh = useGetEffect<ep.Api>(ep.PATH_API, (data) => {
     if (data) {
       form.resetField('name', {
         defaultValue: data.name,
       });
       form.resetField('password');
+      setIsLoading(false);
     }
-  }, true);
+  }, 'refresh');
 
   const handleUpdate = async (data: z.infer<typeof FormSchema>) => {
     const timeout = setTimeout(() => setProcessing(true), 300);
     if (data.password === '') {
       delete data.password;
     }
-    const result = await doPut(ep.PATH_API, data);
+    const result = await doModify('PUT', ep.PATH_API, data);
     clearTimeout(timeout);
     setProcessing(false);
     if (result === 'ok') {
@@ -65,6 +73,60 @@ const Settings: React.FC = () => {
       refresh();
     } else {
       toast((<AlertUpdateFailed />));
+    }
+  };
+
+  const cancel = (): void => {
+    setShowDialog(false);
+  };
+
+  const waitForDisconnect = async (doneName: typeof showDialog, failedName: typeof showDialog) => {
+    let k = 0;
+    do {
+      await sleep(1000);
+      if ((await doPing(ep.PATH_API)) === 'failed') {
+        setProcessing(false);
+        setShowDialog(doneName);
+        return;
+      }
+      k++;
+    } while (k < 5);
+
+    setProcessing(false);
+    setShowDialog(failedName);
+  }
+
+  const confirmReset = async () => {
+    setShowDialog(false);
+    setProcessing(true);
+    const result = await doModify('POST', ep.PATH_API, { reset: true });
+    if (result === 'ok') {
+      await waitForDisconnect('done-reset', 'failed-reset');
+      form.reset();
+    } else {
+      setProcessing(false);
+      toast((
+        <AlertUpdateFailed />
+      ));
+    }
+  };
+
+  const confirmReboot = async () => {
+    setShowDialog(false);
+    setProcessing(true);
+    const result = await doDelete(ep.PATH_API);
+    if (result === 'ok') {
+      setProcessing(false);
+      toast((
+        <AlertUpdateSuccess title="Success">
+          <p>Successfuly rebooted the device.</p>
+        </AlertUpdateSuccess>
+      ));
+    } else {
+      setProcessing(false);
+      toast((
+        <AlertUpdateFailed title="Failed to Reboot"/>
+      ));
     }
   };
 
@@ -83,7 +145,7 @@ const Settings: React.FC = () => {
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter the device name" {...field} />
+                        <Input disabled={isLoading} placeholder="enter the device name" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs">&nbsp;</FormMessage>
                     </FormItem>
@@ -97,7 +159,7 @@ const Settings: React.FC = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type={showPassword ? 'text' : 'password'} placeholder="Change device password" {...field} />
+                        <Input disabled={isLoading} type={showPassword ? 'text' : 'password'} placeholder="change device password" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs">&nbsp;</FormMessage>
                     </FormItem>
@@ -107,6 +169,7 @@ const Settings: React.FC = () => {
                 <div className="flex items-center space-x-2 pb-8">
                   <Checkbox
                     id="showPassword"
+                    disabled={isLoading}
                     checked={showPassword}
                     onCheckedChange={(checked) => setShowPassword(!!checked)}
                   />
@@ -119,12 +182,86 @@ const Settings: React.FC = () => {
                   <Button type="submit" disabled={!form.formState.isDirty}>
                     Update Device
                   </Button>
+                  <div className="w-full"></div>
+                  <Button disabled={isLoading} type="submit" variant="secondary" onClick={(event) => {
+                    event.preventDefault();
+                    setShowDialog('confirm-reboot');
+                  }}>
+                    Reboot
+                  </Button>
+                  <Button disabled={isLoading} type="submit" variant="secondary" onClick={(event) => {
+                    event.preventDefault();
+                    setShowDialog('confirm-reset');
+                  }}>
+                    Factory Reset
+                  </Button>
                 </div>
               </form>
             </Form>
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={showDialog !== false} onOpenChange={setShowDialog as any}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            {showDialog === 'confirm-reset' ? (
+              <AlertDialogTitle>Reset Device!</AlertDialogTitle>
+            ) : showDialog === 'confirm-reboot' ? (
+              <AlertDialogTitle>Reboot Device!</AlertDialogTitle>
+            ) : showDialog === 'failed-reset' ? (
+              <AlertDialogTitle>Failed!</AlertDialogTitle>
+            ) : showDialog === 'done-reset' ? (
+              <AlertDialogTitle>Success</AlertDialogTitle>
+            ) : null}
+
+            {showDialog === 'confirm-reboot' ? (
+              <AlertDialogDescription>
+                Are you sure you want to reboot the device?
+              </AlertDialogDescription>
+            ) : showDialog === 'confirm-reset' ? (
+              <AlertDialogDescription>
+                Are you sure you want to reset the device?
+                This will put the device in the initial state.
+              </AlertDialogDescription>
+            ) : showDialog === 'failed-reset' ? (
+              <AlertDialogDescription>
+                Failed to factory reset, the device is still available.
+                Please try again latter!
+              </AlertDialogDescription>
+            ) : showDialog === 'done-reset' ? (
+              <AlertDialogDescription>
+                Successfully reseted, the device is no longer available.
+                To access the device you will need to connect to its WiFi network.
+                The WiFi name is the device name and the password will be the default one.
+                The IP is <b>192.168.4.1</b>
+              </AlertDialogDescription>
+            ) : null}
+          </AlertDialogHeader>
+
+          {showDialog === 'confirm-reset' || showDialog === 'confirm-reboot' ? (
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={cancel}>Cancel</AlertDialogCancel>
+              {showDialog === 'confirm-reset' ? (
+                <AlertDialogAction onClick={confirmReset} className="bg-red-600 hover:bg-red-700">
+                  Reset
+                </AlertDialogAction>
+              ) : (
+                <AlertDialogAction onClick={confirmReboot} className="bg-red-600 hover:bg-red-700">
+                  Reboot
+                </AlertDialogAction>
+              )}
+            </AlertDialogFooter>
+          ) : showDialog === 'failed-reset' || showDialog === 'done-reset' ? (
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={cancel} className="bg-red-600 hover:bg-red-700">
+                Ok
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          ) : null}
+        </AlertDialogContent>
+      </AlertDialog>
+
       {isProcessing ? (
         <div className="fixed flex justify-center items-center inset-0 z-50 bg-black/30">
           <SpinnerBars className="text-blue-500" size={64} />

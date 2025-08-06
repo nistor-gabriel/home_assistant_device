@@ -10,7 +10,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import { useGetData, doPut, doDelete, doPing, sleep, ep } from '@/lib/utils';
+import { useGetData, doModify, doDelete, doPing, sleep, ep } from '@/lib/utils';
 import { SpinnerBars } from '@/components/ui/shadcn-io/spinner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -35,10 +35,11 @@ const FormSchema = z.object({
 /* ========================================================================== */
 
 const Wlan: React.FC = () => {
-  const wlan = useGetData<ep.Wlan>(ep.PATH_WLAN);
+  const rsp = useGetData<ep.Wlan>(ep.PATH_WLAN);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showDialog, setShowDialog] = useState<'confirm-reset' | 'failed-reset' | 'done-reset' | 'failed-connect' | 'done-connect' | false>(false);
   const [isProcessing, setProcessing] = useState<boolean>(false);
+  const isLoading = rsp.status === 'loading' || rsp.status === 'failed';
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -74,7 +75,7 @@ const Wlan: React.FC = () => {
     } else {
       setProcessing(false);
       toast((
-        <AlertUpdateFailed />
+        <AlertUpdateFailed title="Failed to Reset" />
       ));
     }
   };
@@ -85,14 +86,14 @@ const Wlan: React.FC = () => {
 
   const handleConnect = async (data: z.infer<typeof FormSchema>) => {
     setProcessing(true);
-    const result = await doPut(ep.PATH_WLAN, data);
+    const result = await doModify('PUT', ep.PATH_WLAN, data);
     if (result === 'ok') {
       await waitForDisconnect('done-connect', 'failed-connect');
 
     } else {
       setProcessing(false);
       toast((
-        <AlertUpdateFailed />
+        <AlertUpdateFailed title="Failed to Reset"/>
       ));
     }
   };
@@ -112,7 +113,7 @@ const Wlan: React.FC = () => {
                     <FormItem>
                       <FormLabel>Network Name (SSID)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter WiFi network name" {...field} />
+                        <Input disabled={isLoading} placeholder="enter WiFi network name" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs">&nbsp;</FormMessage>
                     </FormItem>
@@ -126,7 +127,7 @@ const Wlan: React.FC = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type={showPassword ? 'text' : 'password'} placeholder="Enter WiFi password" {...field} />
+                        <Input disabled={isLoading} type={showPassword ? 'text' : 'password'} placeholder="enter WiFi password" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs">&nbsp;</FormMessage>
                     </FormItem>
@@ -136,6 +137,7 @@ const Wlan: React.FC = () => {
                 <div className="flex items-center space-x-2 pb-8">
                   <Checkbox
                     id="showPassword"
+                    disabled={isLoading}
                     checked={showPassword}
                     onCheckedChange={(checked) => setShowPassword(!!checked)}
                   />
@@ -148,7 +150,7 @@ const Wlan: React.FC = () => {
                   <Button type="submit" disabled={!form.formState.isDirty}>
                     Connect to Network
                   </Button>
-                  {wlan.data?.ip ? (
+                  {rsp.data?.ip ? (
                     <Button variant="secondary" onClick={(event) => {
                       event.preventDefault();
                       setShowDialog('confirm-reset');
@@ -222,6 +224,7 @@ const Wlan: React.FC = () => {
           ) : null}
         </AlertDialogContent>
       </AlertDialog>
+
       {isProcessing ? (
         <div className="fixed flex justify-center items-center inset-0 z-50 bg-black/30">
           <SpinnerBars className="text-blue-500" size={64} />

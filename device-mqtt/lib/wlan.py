@@ -27,9 +27,15 @@ class Wlan:
         self._conn_pass: str | None = None
         self._ifconfig: typ.Union[(str, str, str, str), None] = None
 
-        self.on_connect = util.Listeners()
-        self.on_disconnect = util.Listeners()
+        self._connect_listeners = util.Listeners()
+        self._disconnect_listeners = util.Listeners()
         self.wlan: network.WLAN = None
+
+    def add_connect_listener(self, listener: typ.Callable[[bool], None]):
+        return self._connect_listeners.add(listener)
+
+    def add_disconnect_listener(self, listener: typ.Callable[[], None]):
+        return self._disconnect_listeners.add(listener)
 
     def get_ssid(self):
         return self._ssid.get()
@@ -88,12 +94,10 @@ class Wlan:
         self._loop.create_task(self._run())
 
     def _on_connect(self, has_internet: bool):
-        for listener in self.on_connect.iter():
-            listener(has_internet)
+        self._connect_listeners.notify(has_internet)
 
     def _on_disconnect(self):
-        for listener in self.on_disconnect.iter():
-            listener()
+        self._disconnect_listeners.notify()
 
     # noinspection PyBroadException
     async def _run(self):
@@ -130,10 +134,13 @@ class Wlan:
 
                     self._conn_ssid = self._conn_pass = None
 
+                # print('DEBUG: wlan connected')
                 self._on_connect(True)
+                # print('DEBUG: wlan after connect')
 
                 reconnect = False
                 while True:
+                    # print('DEBUG: wlan pinging')
                     try:
                         sent, recv = ping(self.get_gateway(), count=1)
                         if sent != recv:
@@ -149,10 +156,14 @@ class Wlan:
                         self.wlan.active(False)
                         self.wlan = None
                         self._on_disconnect()
+                        # print('DEBUG: wlan disconnect')
                         break
-                    await asyncio.sleep(10)
 
+                    # print('DEBUG: wlan waiting')
+                    await asyncio.sleep(10)
+                    # print('DEBUG: wlan after waiting')
             else:
+                # print('DEBUG: wlan starting AP')
                 self.wlan = network.WLAN(network.AP_IF)
                 self.wlan.active(True)
                 self.wlan.config(ssid=self._name.get(), password='sigma2000',
@@ -171,7 +182,9 @@ class Wlan:
                         self.wlan.active(False)
                         self.wlan = None
                         self._on_disconnect()
+                        # print('DEBUG: wlan disconnect AP')
                         break
+                    # print('DEBUG: wlan processing DNS')
                     try:
                         data, addr = udps.recvfrom(1024)
                         p = DNSQuery(data)

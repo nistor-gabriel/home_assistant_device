@@ -34,13 +34,13 @@ class Device:
         mqtt.on_connected.add(publish_device_config)
 
     async def reset(self):
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.3)
         self._config.reset()
         machine.reset()
 
     @staticmethod
     async def reboot():
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.3)
         machine.reset()
 
     def get_name(self):

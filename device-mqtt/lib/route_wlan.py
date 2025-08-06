@@ -26,8 +26,8 @@ def install_wlan(app: Microdot, auth: Auth, wlan: Wlan, mqtt: MQTTRepo, device: 
     def on_disconnect():
         event.set()
 
-    wlan.on_connect.add(on_connect)
-    wlan.on_disconnect.add(on_disconnect)
+    wlan.add_connect_listener(on_connect)
+    wlan.add_disconnect_listener(on_disconnect)
 
     async def run():
         while True:

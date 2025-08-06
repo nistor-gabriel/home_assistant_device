@@ -20,7 +20,7 @@ export interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ setSidebarOpen, activeSection, menuItems }) => {
   const getSectionTitle = (section: string): string => {
     const selected = menuItems.find((menu) => menu.id === section);
-    if(!selected) {
+    if (!selected) {
       return section.charAt(0).toUpperCase() + section.slice(1);
     }
     return selected.label;

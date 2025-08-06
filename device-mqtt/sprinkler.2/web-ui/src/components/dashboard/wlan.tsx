@@ -1,17 +1,19 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Wifi } from 'lucide-react';
-import { useGetData, cn, ep } from '@/lib/utils'
+import { useGetData, cn, ep, useTimelyRefresh } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 /* ========================================================================== */
 
 const DashboardWlan: React.FC = () => {
-    const wlan = useGetData<ep.Wlan>(ep.PATH_WLAN);
-    const isLoading = wlan.status === 'loading';
-    const isError = wlan.status === 'failed';
-    const isOk = wlan.status === 'ok';
+    const [rsp, refreshWlan] = useGetData<ep.Wlan>(ep.PATH_WLAN, 'refresh');
+    const isLoading = rsp.status === 'loading';
+    const isError = rsp.status === 'failed';
+    const isOk = rsp.status === 'ok';
+
+    useTimelyRefresh(45, refreshWlan);
 
     return (
         <Card>
@@ -22,7 +24,7 @@ const DashboardWlan: React.FC = () => {
             <CardContent>
                 <div className="space-y-2">
                     {isOk ? (
-                        <p className="text-sm mt-2 mb-1 text-gray-600">Connected to <b>{wlan.data?.ssid}</b></p>
+                        <p className="text-sm mt-2 mb-1 text-gray-600">Connected to <b>{rsp.data?.ssid}</b></p>
                     ) : isError ? null : (
                         <Skeleton className="h-[20px] w-[140px] mt-2 mb-2" />
                     )}
@@ -30,10 +32,10 @@ const DashboardWlan: React.FC = () => {
                         <Table className="ml-2 w-[10%] text-nowrap">
                             <TableBody>
                                 {[
-                                    { label: 'Signal', value: <>{wlan.data?.signal ? (wlan.data.signal).toFixed(0) + ' %' : '-'}</> },
-                                    { label: 'Ip', value: <>{wlan.data?.ip ? wlan.data.ip : '-'}</> },
-                                    { label: 'DNS', value: <>{wlan.data?.dns ? wlan.data.dns : '-'}</> },
-                                    { label: 'Gateway', value: <>{wlan.data?.gateway ? wlan.data.gateway : '-'}</> },
+                                    { label: 'Signal', value: <>{rsp.data?.signal ? (rsp.data.signal).toFixed(0) + ' %' : '-'}</> },
+                                    { label: 'Ip', value: <>{rsp.data?.ip ? rsp.data.ip : '-'}</> },
+                                    { label: 'DNS', value: <>{rsp.data?.dns ? rsp.data.dns : '-'}</> },
+                                    { label: 'Gateway', value: <>{rsp.data?.gateway ? rsp.data.gateway : '-'}</> },
                                 ].map(({ label, value }, key) => (
                                     <TableRow key={key}>
                                         <TableCell className="p-2 text-xs text-gray-500"><span className="mr-1">{label}</span></TableCell>

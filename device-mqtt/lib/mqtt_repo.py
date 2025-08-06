@@ -102,8 +102,8 @@ class MQTTRepo:
         def on_disconnect():
             self._shutdown()
 
-        self._wlan.on_connect.add(on_connect)
-        self._wlan.on_disconnect.add(on_disconnect)
+        self._wlan.add_connect_listener(on_connect)
+        self._wlan.add_disconnect_listener(on_disconnect)
 
     async def _start(self):
         if self._is_connecting:
@@ -128,7 +128,7 @@ class MQTTRepo:
                     self._client = client
                     print('connected to %s MQTT broker' % (self._server.get(),))
                     self._connected()
-                except OSError as e:
+                except Exception as e:
                     print('ERROR: failed to connect to %s MQTT broker' % (self._server.get(),), e)
                     self._disconnect()
                     await asyncio.sleep(self._interval_mqtt_reconnect)
@@ -140,6 +140,8 @@ class MQTTRepo:
                         self._disconnect()
                         print('ERROR: exception occurred on message check:', e)
                 await asyncio.sleep(self._interval_mqtt_check)
+            else:
+                await asyncio.sleep(self._interval_mqtt_reconnect)
 
     def _publish(self, topic: str, msg: str):
         if self._client:
@@ -153,8 +155,7 @@ class MQTTRepo:
 
     def _connected(self):
         self.put('device/%(id)s/status', 'online')
-        for listener in self.on_connected.iter():
-            listener()
+        self.on_connected.notify()
         for topic in list(self._data.keys()):
             self._publish(topic, self._data[topic])
             del self._data[topic]

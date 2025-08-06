@@ -39,6 +39,10 @@ class Listeners:
     def iter(self):
         return self._listeners.values()
 
+    def notify(self, *args, **kwargs):
+        for listener in self._listeners.values():
+            listener(*args, **kwargs)
+
 
 is_time_synchronized: bool = False
 start_time = time.time()
@@ -49,6 +53,7 @@ def uptime():
 
 
 async def synchronize_time():
+    # print('DEBUG: synchronize time')
     global is_time_synchronized, start_time
     while not is_time_synchronized:
         try:
