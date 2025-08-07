@@ -1,48 +1,53 @@
 {
   "@template": {
-    "state_topic": "device/%(id)s/stats",
+    "state_topic": "device/%(device_id)s/stats",
     "entity_category": "diagnostic",
-    "availability_topic": "device/%(id)s/status",
+    "availability_topic": "device/%(device_id)s/status",
     "payload_available": "online",
     "payload_not_available": "offline"
   },
-  "homeassistant/sensor/%(id)s/memoryFree/config": {
+  "homeassistant/sensor/%(device_id)s/memoryfree/config": {
     "name": "Free Memory",
     "unit_of_measurement": "Kb",
     "value_template": "{{ (value_json.memoryFree | float / 1024) | round(2) }}",
-    "unique_id": "%(id)s-memoryFree",
+    "unique_id": "%(device_id)s_memoryfree",
+    "object_id": "%(device_id)s_memoryfree",
     "icon": "mdi:memory"
   },
-  "homeassistant/sensor/%(id)s/memoryUsed/config": {
+  "homeassistant/sensor/%(device_id)s/memoryused/config": {
     "name": "Used Memory",
-    "state_topic": "device/%(id)s/stats",
+    "state_topic": "device/%(device_id)s/stats",
     "unit_of_measurement": "Kb",
     "value_template": "{{ (value_json.memoryUsed | float / 1024) | round(2) }}",
-    "unique_id": "%(id)s-memoryUsed",
+    "unique_id": "%(device_id)s_memoryused",
+    "object_id": "%(device_id)s_memoryused",
     "icon": "mdi:memory"
   },
-  "homeassistant/sensor/%(id)s/flashFree/config": {
+  "homeassistant/sensor/%(device_id)s/flashfree/config": {
     "name": "Free Flash",
-    "state_topic": "device/%(id)s/stats",
+    "state_topic": "device/%(device_id)s/stats",
     "unit_of_measurement": "Kb",
     "value_template": "{{ (value_json.flashFree | float / 1024) | round(2) }}",
-    "unique_id": "%(id)s-flashFree",
+    "unique_id": "%(device_id)s_flashfree",
+    "object_id": "%(device_id)s_flashfree",
     "icon": "mdi:harddisk"
   },
-  "homeassistant/sensor/%(id)s/flashUsed/config": {
+  "homeassistant/sensor/%(device_id)s/flashused/config": {
     "name": "Used Flash",
-    "state_topic": "device/%(id)s/stats",
+    "state_topic": "device/%(device_id)s/stats",
     "unit_of_measurement": "Kb",
     "value_template": "{{ (value_json.flashUsed | float / 1024) | round(2) }}",
-    "unique_id": "%(id)s-flashUsed",
+    "unique_id": "%(device_id)s_flashused",
+    "object_id": "%(device_id)s_flashused",
     "icon": "mdi:harddisk"
   },
-  "homeassistant/sensor/%(id)s/uptime/config": {
+  "homeassistant/sensor/%(device_id)s/uptime/config": {
     "name": "On Since",
-    "state_topic": "device/%(id)s/stats",
+    "state_topic": "device/%(device_id)s/stats",
     "device_class": "timestamp",
     "value_template": "{{ as_datetime(now() - timedelta(seconds=value_json.uptime|int)) }}",
-    "unique_id": "%(id)s-uptime",
+    "unique_id": "%(device_id)s_uptime",
+    "object_id": "%(device_id)s_uptime",
     "icon": "mdi:clock-outline"
   }
 }

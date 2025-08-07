@@ -1,14 +1,15 @@
 {
-  "homeassistant/sensor/%(id)s/wifiSignal/config": {
-    "state_topic": "device/%(id)s/wlan",
+  "homeassistant/sensor/%(device_id)s/wifisignal/config": {
+    "state_topic": "device/%(device_id)s/wlan",
     "entity_category": "diagnostic",
-    "availability_topic": "device/%(id)s/status",
+    "availability_topic": "device/%(device_id)s/status",
     "payload_available": "online",
     "payload_not_available": "offline",
     "name": "Wifi Signal",
     "unit_of_measurement": "%%",
     "value_template": "{{ value_json.signal }}",
-    "unique_id": "%(id)s-wifiSignal",
+    "unique_id": "%(device_id)s_wifisignal",
+    "object_id": "%(device_id)s_wifisignal",
     "icon": "mdi:wifi-strength-2"
   }
 }

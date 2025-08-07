@@ -343,7 +343,6 @@ switch:
               set: off
           - service: homeassistant.update_entity
             entity_id: sensor.pompa_gradina_status
-
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 
 timer:
@@ -366,6 +365,53 @@ lock:
           entity_id: sensor.door_bell_status
           channel: 1
           short_number: HA
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+mqtt:
+  - number:
+      name: Light Auto-Off in
+      command_topic: device/e6614103e7178d24/switch/2/set
+      icon: mdi:sleep
+      min: 0
+      max: 43200
+      step: 1
+      mode: box
+      unit_of_measurement: seconds
+      optimistic: false
+      qos: 1
+      retain: false
+
+# mqtt:
+#   switch:
+#     - name: TTT Switch
+#       object_id: tttt_switch
+#       unique_id: tttt_switch
+#       state_topic: device/e6614103e7178d24/switch/2
+#       command_topic: device/e6614103e7178d24/switch/2/set
+#       availability:
+#         - topic:  device/e6614103e7178d24/switch/2/status
+#           payload_available: online
+#           payload_not_available: offline
+#         - topic:  device/e6614103e7178d24/status
+#           payload_available: online
+#           payload_not_available: offline
+#       availability_mode: all
+#       payload_on: "ON"
+#       payload_off: "OFF"
+#       state_on: "ON"
+#       state_off: "OFF"
+#       optimistic: false
+#       qos: 0
+#       retain: true
+#   sensor:
+#     - name: Delta Time
+#       state_topic: device/e6614103e7178d24/switch/1/stats
+#       unique_id: tttt_delta_time
+#       object_id: tttt_delta_time
+#       icon: mdi:wifi-strength-2
+#       device_class: timestamp
+#       value_template: "{{ as_datetime(value_json.onSince) | as_local }}"
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 

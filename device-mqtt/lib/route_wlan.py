@@ -31,14 +31,17 @@ def install_wlan(app: Microdot, auth: Auth, wlan: Wlan, mqtt: MQTTRepo, device: 
 
     async def run():
         while True:
-            data.update(
-                ssid=wlan.get_ssid(),
-                ip=wlan.get_ip(),
-                subnet=wlan.get_subnet(),
-                dns=wlan.get_dns(),
-                signal=wlan.wifi_signal(),
-                gateway=wlan.get_gateway(),
-            )
+            try:
+                data.update(
+                    ssid=wlan.get_ssid(),
+                    ip=wlan.get_ip(),
+                    subnet=wlan.get_subnet(),
+                    dns=wlan.get_dns(),
+                    signal=wlan.wifi_signal(),
+                    gateway=wlan.get_gateway(),
+                )
+            except Exception as e:
+                print('ERROR: failed to process wlan route', e)
             mqtt.put_obj('device/%(id)s/wlan', data)
             try:
                 await asyncio.wait_for(event.wait(), timeout=interval_refresh)

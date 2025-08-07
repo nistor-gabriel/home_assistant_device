@@ -3,6 +3,7 @@ from mqtt_repo import MQTTRepo
 from wlan import Wlan
 import json
 import util
+
 try:
     import typ
 except ImportError:
@@ -27,11 +28,17 @@ class Device:
         self._name = name
         self._api_type = api_type
         self._version = version
-        self._configs: [str] = []
+        self._configs: typ.Dict[str, typ.Union[
+            typ.Callable[[], typ.Generator[typ.Dict[str, str], None, None]],
+            None
+        ]] = {
+            'device_config.json': None,
+        }
 
         def publish_device_config():
             self.publish_device_config()
-        mqtt.on_connected.add(publish_device_config)
+
+        mqtt.add_connected_listener(publish_device_config)
 
     async def reset(self):
         await asyncio.sleep(0.3)
@@ -59,26 +66,34 @@ class Device:
     def get_version(self):
         return self._version
 
-    def add_config(self, config_file: str):
-        self._configs.append(config_file)
+    def add_config(self, config_file: str,
+                   vars_source: typ.Callable[[], typ.Generator[typ.Dict[str, str], None, None]] = None):
+        self._configs[config_file] = vars_source
 
     def publish_device_config(self):
         ip = self._wlan.get_ip()
         ip = ip if ip else '?'
 
         vars = {
-            'name': self._name.get(),
-            'api_type': self._api_type,
-            'version': self._version,
-            'id': self._mqtt.get_active_client_id(),
-            'ip': ip,
+            'device_name': self._name.get(),
+            'device_api_type': self._api_type,
+            'device_version': self._version,
+            'device_id': self._mqtt.get_active_client_id(),
+            'device_ip': ip,
         }
 
         with open('device_template.json') as json_file:
             template = json.load(json_file)
 
         for file in self._configs:
-            self._put_config(file, template, vars)
+            vars_source = self._configs[file]
+            if vars_source:
+                for vars_extra in vars_source():
+                    vars_all = dict(vars)
+                    vars_all.update(vars_extra)
+                    self._put_config(file, template, vars_all)
+            else:
+                self._put_config(file, template, vars)
 
     def _put_config(self, file: str, template: typ.Dict[str, typ.Any], vars: typ.Dict[str, str]):
         with open(file) as json_file:

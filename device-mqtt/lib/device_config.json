@@ -1,0 +1,10 @@
+{
+  "homeassistant/sensor/%(device_id)s/status/config": {
+    "name": "Device Status",
+    "state_topic": "device/%(device_id)s/status",
+    "unique_id": "%(device_id)s_status",
+    "object_id": "%(device_id)s_status",
+    "entity_category": "diagnostic",
+    "icon": "mdi:lightbulb-on"
+  }
+}

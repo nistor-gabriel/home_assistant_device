@@ -44,7 +44,6 @@ const DashboardSwitch: React.FC = () => {
     const [selectTimeout, setSelectTimeout] = useState<string>('none');
     const [hourTimeout, setHourTimeout] = useState<number | string>('');
     const [minuteTimeout, setMinuteTimeout] = useState<number | string>('');
-    const [secondTimeout, setSecondTimeout] = useState<number | string>('');
 
     const processDate = (sdate: string) => {
         return deltaTime + new Date(sdate).getTime();
@@ -98,11 +97,10 @@ const DashboardSwitch: React.FC = () => {
         }
         let on: boolean | number = true;
         if (selectTimeout === 'custom') {
-            on = (typeof hourTimeout === 'number' ? hourTimeout : 0) * 3600 +
-                (typeof minuteTimeout === 'number' ? minuteTimeout : 0) * 60 +
-                (typeof secondTimeout === 'number' ? secondTimeout : 0);
+            on = (typeof hourTimeout === 'number' ? hourTimeout : 0) * 60 +
+                (typeof minuteTimeout === 'number' ? minuteTimeout : 0)
         } else if (selectTimeout !== 'none') {
-            on = parseInt(selectTimeout) * 60;
+            on = parseInt(selectTimeout);
         }
 
         const path = ep.pathSwitchItem(targetSwitch);
@@ -201,7 +199,6 @@ const DashboardSwitch: React.FC = () => {
                             <div className="flex space-x-4 mt-6">
                                 <Input type="number" value={hourTimeout} onChange={(e) => setHourTimeout(normalize(e.target.value, false))} placeholder="hours" min={0} step={1} disabled={!isCustom} />
                                 <Input type="number" value={minuteTimeout} onChange={(e) => setMinuteTimeout(normalize(e.target.value, true))} placeholder="minutes" min={0} max={59} step={1} disabled={!isCustom} />
-                                <Input type="number" value={secondTimeout} onChange={(e) => setSecondTimeout(normalize(e.target.value, true))} placeholder="seconds" min={0} max={59} step={1} disabled={!isCustom} />
                             </div>
                         </div>
                     </AlertDialogHeader>

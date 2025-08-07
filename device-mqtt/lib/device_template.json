@@ -1,15 +1,15 @@
 {
   "device": {
-    "name": "%(name)s",
+    "name": "%(device_name)s",
     "manufacturer": "Nistor Gabriel",
-    "model": "%(api_type)s",
-    "model_id": "%(api_type)s",
-    "serial_number": "%(id)s",
+    "model": "%(device_api_type)s",
+    "model_id": "%(device_api_type)s",
+    "serial_number": "%(device_id)s",
     "hw_version": "1.0",
-    "sw_version": "%(version)s",
+    "sw_version": "%(device_version)s",
     "identifiers": [
-      "%(id)s"
+      "%(device_id)s"
     ],
-    "configuration_url": "http://%(ip)s"
+    "configuration_url": "http://%(device_ip)s"
   }
 }

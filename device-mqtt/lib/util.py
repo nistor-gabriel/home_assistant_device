@@ -41,7 +41,10 @@ class Listeners:
 
     def notify(self, *args, **kwargs):
         for listener in self._listeners.values():
-            listener(*args, **kwargs)
+            try:
+                listener(*args, **kwargs)
+            except Exception as e:
+                print('ERROR: failed to run listener', listener, e)
 
 
 is_time_synchronized: bool = False

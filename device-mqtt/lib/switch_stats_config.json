@@ -1,0 +1,39 @@
+{
+  "@template": {
+    "availability": [
+      {
+        "topic": "device/%(device_id)s/switch/%(switch_id)s/status",
+        "payload_available": "online",
+        "payload_not_available": "offline"
+      },
+      {
+        "topic": "device/%(device_id)s/switch/%(switch_id)s",
+        "payload_available": "ON",
+        "payload_not_available": "OFF"
+      },
+      {
+        "topic": "device/%(device_id)s/status",
+        "payload_available": "online",
+        "payload_not_available": "offline"
+      }
+    ],
+    "availability_mode": "all",
+    "state_topic": "device/%(device_id)s/switch/%(switch_id)s/stats"
+  },
+  "homeassistant/sensor/%(device_id)s/%(switch_id)s_onsince/config": {
+    "name": "%(switch_name)s On Since",
+    "device_class": "timestamp",
+    "value_template": "{{ as_datetime(value_json.onSince) | as_local }}",
+    "unique_id": "%(device_id)s_%(switch_id)s_onsince",
+    "object_id": "%(device_id)s_%(switch_id)s_onsince",
+    "icon": "mdi:clock-outline"
+  },
+  "homeassistant/sensor/%(device_id)s/%(switch_id)s_stoptimeout/config": {
+    "name": "%(switch_name)s Auto-Off",
+    "device_class": "timestamp",
+    "value_template": "{{ iif(value_json.stopTimeout == 'OFF', '', as_local(as_datetime(value_json.onSince)) + timedelta(seconds=value_json.stopTimeout|int(0))) }}",
+    "unique_id": "%(device_id)s_%(switch_id)s_stoptimeout",
+    "object_id": "%(device_id)s_%(switch_id)s_stoptimeout",
+    "icon": "mdi:alarm"
+  }
+}

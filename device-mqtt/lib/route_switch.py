@@ -1,7 +1,8 @@
 from microdot import Microdot, Request
 from switch import Switch
 from auth import Auth
-from config import Config
+from mqtt_repo import MQTTRepo
+from device import Device
 import util
 import time
 try:
@@ -10,26 +11,74 @@ except ImportError:
     typ = None
 
 
-class Model:
+def mqtt_switch_path(switch: Switch):
+    return 'device/%(id)s/switch/' + str(switch.get_id())
 
-    def __init__(self, config: Config, switch: Switch):
-        self.name = config.create('switch_' + str(switch.get_id()) + '_name', 'Switch ' + str(switch.get_id()))
-        self.switch = switch
 
-    def build(self):
-        data = {
-            'id': self.switch.get_id(),
-            'name': self.name.get(),
-            'on': self.switch.is_on(),
-            'disabled': self.switch.is_disabled(),
+def install_switches(app: Microdot, auth: Auth, mqtt: MQTTRepo, device: Device, switches: typ.List[Switch]):
+    def subscribe_switch(switch: Switch):
+        path = mqtt_switch_path(switch)
+        stop = {
+            'timeout': 0,
+            'enabled': False,
         }
-        if self.switch.get_on_since():
-            data['onSince'] = util.format_date(time.localtime(self.switch.get_on_since()))
-            data['stopTimeout'] = self.switch.get_stop_time()
-        return data
 
+        def cb_status(_topic: str, msg: str):
+            if msg == 'online':
+                switch.set_disabled(False)
+            elif msg == 'offline':
+                switch.set_disabled(True)
 
-def install_switches(app: Microdot, auth: Auth, switches: typ.List[Switch]):
+        def cb_set(_topic: str, msg: str):
+            if msg == 'ON':
+                if stop['enabled']:
+                    switch.on(timeout=stop['timeout'] * 60)
+                else:
+                    switch.on()
+            elif msg == 'OFF':
+                switch.off()
+
+        def cb_timeout(_topic: str, msg: str):
+            try:
+                stop['timeout'] = int(msg)
+            except ValueError as e:
+                print('ERROR: invalid stop timeout number received', msg, e)
+
+        def cb_timeout_enabled(_topic: str, msg: str):
+            stop['enabled'] = msg == 'ON'
+
+        mqtt.subscribe(path + '/set', cb_set)
+        mqtt.subscribe(path + '/status/set', cb_status)
+        mqtt.subscribe(path + '/stoptimeout', cb_timeout)
+        mqtt.subscribe(path + '/stoptimeout/enabled', cb_timeout_enabled)
+
+    def publish_switch(switch: Switch):
+        path = mqtt_switch_path(switch)
+
+        mqtt.put(path, 'ON' if switch.is_on() else 'OFF')
+        mqtt.put(path + '/status', 'offline' if switch.is_disabled() else 'online')
+        mqtt.put_obj(path + '/stats', {
+            'onSince': util.format_date(time.localtime(switch.get_on_since())),
+            'stopTimeout': 'OFF' if switch.get_stop_time() == 0 else switch.get_stop_time(),
+        } if switch.is_on() else {})
+
+    def register():
+        for switch in switches:
+            subscribe_switch(switch)
+            publish_switch(switch)
+            switch.add_listener(publish_switch)
+
+        def switches_vars():
+            for sw in switches:
+                yield {
+                    'switch_id': str(sw.get_id()),
+                    'switch_name': sw.get_name(),
+                }
+
+        device.add_config('switch_config.json', switches_vars)
+        device.add_config('switch_stats_config.json', switches_vars)
+
+    register()
 
     def build(switch: Switch):
         data = {
@@ -85,7 +134,7 @@ def install_switches(app: Microdot, auth: Auth, switches: typ.List[Switch]):
             else:
                 if not util.is_int(on, min_value=0):
                     return {'on': 'invalid'}, 400
-                timeout = on
+                timeout = on * 60
                 on = True
 
             if on:

@@ -68,7 +68,7 @@ install_mqtt(app=app, auth=auth, mqtt=mqtt)
 install_api(app=app, auth=auth, device=device, loop=loop)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
 install_wlan(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
-install_switches(app=app, auth=auth, switches=[switch_light, switch_pump])
+install_switches(app=app, auth=auth, mqtt=mqtt, device=device, switches=[switch_light, switch_pump])
 install_fs(app=app, auth=auth)
 install_ui(app=app, auth=auth)
 

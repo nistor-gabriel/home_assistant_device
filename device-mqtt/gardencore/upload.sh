@@ -26,11 +26,14 @@ ROOT="$( cd $ROOT_PROJ && cd ../.. && pwd )"
 #ppy put ../lib/route_fs.py route_fs.py
 #ppy put ../lib/route_wlan.py route_wlan.py
 #ppy put ../lib/route_ui.py route_ui.py
-ppy put ../lib/route_switch.py route_switch.py
+#ppy put ../lib/route_switch.py route_switch.py
 ## ----------------------------------------------------------------------------------------------------------------------
 #pjson put ../lib/stats_config.json stats_config.json
 #pjson put ../lib/wlan_config.json wlan_config.json
+#pjson put ../lib/switch_config.json switch_config.json
+#pjson put ../lib/switch_stats_config.json switch_stats_config.json
 #pjson put ../lib/device_template.json device_template.json
+#pjson put ../lib/device_config.json device_config.json
 #pjson put ../wlan_config.json config.json
 ## ----------------------------------------------------------------------------------------------------------------------
 #ppy put setup.py setup.py

@@ -30,7 +30,7 @@ from wlan import Wlan
 
 class MQTTRepo:
 
-    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 5,
+    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 0.5,
                  interval_mqtt_reconnect: float = 30, interval_mqtt_keepalive: float = 60):
         self._wlan = wlan
         self._loop = loop
@@ -47,7 +47,8 @@ class MQTTRepo:
         self._interval_mqtt_check = interval_mqtt_check
         self._interval_mqtt_reconnect = interval_mqtt_reconnect
         self._interval_mqtt_keepalive = interval_mqtt_keepalive
-        self.on_connected = util.Listeners()
+        self._connected_listeners = util.Listeners()
+        self._subscriptions: typ.Dict[str, typ.List[typ.Callable[[str, str], None]]] = {}
 
     def get_server(self):
         return self._server.get()
@@ -94,6 +95,9 @@ class MQTTRepo:
         self._pass.set(password)
         self._disconnect()
 
+    def add_connected_listener(self, listener: typ.Callable[[], None]):
+        return self._connected_listeners.add(listener)
+
     def setup(self):
         def on_connect(has_internet: bool):
             if has_internet:
@@ -111,7 +115,13 @@ class MQTTRepo:
         self._is_connecting = True
 
         def sub_cb(topic, msg):
-            print((topic, msg))
+            topic_str = topic.decode()
+            msg_str = msg.decode()
+            # print('DEBUG: received for topic', topic_str, 'the message', msg_str)
+            cbs = self._subscriptions.get(topic_str)
+            if cbs:
+                for cb in cbs:
+                    cb(topic_str, msg_str)
 
         while self._is_connecting:
             if self._server.get() and not self._client:
@@ -124,7 +134,6 @@ class MQTTRepo:
                         'device/%(id)s/status' % {'id': self.get_active_client_id()}, 'offline', True, 1)
                     client.set_callback(sub_cb)
                     client.connect()
-                    # client.subscribe('test_receive')
                     self._client = client
                     print('connected to %s MQTT broker' % (self._server.get(),))
                     self._connected()
@@ -132,6 +141,7 @@ class MQTTRepo:
                     print('ERROR: failed to connect to %s MQTT broker' % (self._server.get(),), e)
                     self._disconnect()
                     await asyncio.sleep(self._interval_mqtt_reconnect)
+
             if self._client:
                 try:
                     self._client.check_msg()
@@ -147,15 +157,25 @@ class MQTTRepo:
         if self._client:
             try:
                 self._client.publish(topic, msg, True, 1)
-            except OSError as e:
+            except Exception as e:
                 print('ERROR: exception occurred on publish:', e)
                 self._disconnect()
         else:
             self._data[topic] = msg
 
+    def _subscribe(self, topic: str):
+        if self._client:
+            try:
+                self._client.subscribe(topic, 1)
+            except Exception as e:
+                print('ERROR: exception occurred on subscribe:', e)
+                self._disconnect()
+
     def _connected(self):
         self.put('device/%(id)s/status', 'online')
-        self.on_connected.notify()
+        self._connected_listeners.notify()
+        for topic in self._subscriptions:
+            self._subscribe(topic)
         for topic in list(self._data.keys()):
             self._publish(topic, self._data[topic])
             del self._data[topic]
@@ -172,6 +192,16 @@ class MQTTRepo:
     def _shutdown(self):
         self._is_connecting = False
         self._disconnect()
+
+    def subscribe(self, topic: str, cb: typ.Callable[[str, str], None]):
+        topic = topic % {'id': self.get_active_client_id()}
+        cbs = self._subscriptions.get(topic)
+        if not cbs:
+            cbs = []
+            self._subscriptions[topic] = cbs
+        cbs.append(cb)
+        self._subscribe(topic)
+        # print('DEBUG: subscribed to topic', topic, 'with call back', cb)
 
     def put(self, topic: str, msg: str):
         topic = topic % {'id': self.get_active_client_id()}
