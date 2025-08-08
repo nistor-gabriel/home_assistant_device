@@ -66,15 +66,23 @@ class Device:
     def get_version(self):
         return self._version
 
-    def add_config(self, config_file: str,
+    def add_config(self, file: str,
                    vars_source: typ.Callable[[], typ.Generator[typ.Dict[str, str], None, None]] = None):
-        self._configs[config_file] = vars_source
+        self._configs[file] = vars_source
+
+        return lambda: self._publish_config(file)
 
     def publish_device_config(self):
+        vars = self._build_vars()
+        template = self._read_template()
+
+        for file in self._configs:
+            self._publish_config(file, vars=vars, template=template)
+
+    def _build_vars(self):
         ip = self._wlan.get_ip()
         ip = ip if ip else '?'
-
-        vars = {
+        return {
             'device_name': self._name.get(),
             'device_api_type': self._api_type,
             'device_version': self._version,
@@ -82,20 +90,28 @@ class Device:
             'device_ip': ip,
         }
 
+    @staticmethod
+    def _read_template() -> typ.Dict:
         with open('device_template.json') as json_file:
-            template = json.load(json_file)
+            return json.load(json_file)
 
-        for file in self._configs:
-            vars_source = self._configs[file]
-            if vars_source:
-                for vars_extra in vars_source():
-                    vars_all = dict(vars)
-                    vars_all.update(vars_extra)
-                    self._put_config(file, template, vars_all)
-            else:
-                self._put_config(file, template, vars)
+    def _publish_config(self, file: str, vars: typ.Union[typ.Dict, None] = None,
+                        template: typ.Union[typ.Dict, None] = None):
+        if not vars:
+            vars = self._build_vars()
+        if not template:
+            template = self._read_template()
 
-    def _put_config(self, file: str, template: typ.Dict[str, typ.Any], vars: typ.Dict[str, str]):
+        vars_source = self._configs[file]
+        if vars_source:
+            for vars_extra in vars_source():
+                vars_all = dict(vars)
+                vars_all.update(vars_extra)
+                self._put_config(file, template, vars_all)
+        else:
+            self._put_config(file, template, vars)
+
+    def _put_config(self, file: str, template: typ.Dict, vars: typ.Dict[str, str]):
         with open(file) as json_file:
             data = json.load(json_file)
         tpl = data.get('@template')
@@ -111,4 +127,5 @@ class Device:
             msg_str = json.dumps(msg)
             topic = topic % vars
             msg_str = msg_str % vars
+            self._mqtt.put(topic, '')
             self._mqtt.put(topic, msg_str)

@@ -49,7 +49,6 @@ class Switch:
             print('ERROR: invalid relay name')
             return False
         self._name.set(name)
-        self._listeners.notify(self)
         return True
 
     def is_disabled(self):

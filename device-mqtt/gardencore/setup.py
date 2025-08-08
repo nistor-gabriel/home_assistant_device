@@ -7,6 +7,7 @@ from mqtt_repo import MQTTRepo
 from trigger_button_toggle import TriggerButtonToggle
 from blinker import Blinker
 from switch import Switch
+from controller import Controller
 from route_stats import install_stats
 from route_fs import install_fs
 from route_mqtt import install_mqtt
@@ -50,6 +51,9 @@ trigger_light = TriggerButtonToggle(pin=17, loop=loop)
 blinker_pump = Blinker(pin=18, loop=loop)
 switch_pump = Switch(pin=26, id_=1, config=config, loop=loop, blinker=blinker_pump, trigger=trigger_pump)
 switch_light = Switch(pin=27, id_=2, config=config, loop=loop, trigger=trigger_light)
+controller = Controller(config=config, pin=28, off_low_pressure=1, off_low_period=3, off_low_start_period=5,
+                        off_high_pressure=4, off_high_period=3, switch_pump=switch_pump, blinker_pump=blinker_pump,
+                        loop=loop)
 
 wlan.add_connect_listener(on_connect)
 wlan.add_disconnect_listener(on_disconnect)
@@ -63,12 +67,13 @@ trigger_light.setup()
 blinker_pump.setup()
 switch_pump.setup()
 switch_light.setup()
+controller.setup()
 
 install_mqtt(app=app, auth=auth, mqtt=mqtt)
 install_api(app=app, auth=auth, device=device, loop=loop)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
 install_wlan(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
-install_switches(app=app, auth=auth, mqtt=mqtt, device=device, switches=[switch_light, switch_pump])
+install_switches(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop, switches=[switch_light, switch_pump])
 install_fs(app=app, auth=auth)
 install_ui(app=app, auth=auth)
 

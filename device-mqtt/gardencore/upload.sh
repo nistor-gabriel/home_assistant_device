@@ -36,6 +36,8 @@ ROOT="$( cd $ROOT_PROJ && cd ../.. && pwd )"
 #pjson put ../lib/device_config.json device_config.json
 #pjson put ../wlan_config.json config.json
 ## ----------------------------------------------------------------------------------------------------------------------
-#ppy put setup.py setup.py
+ppy put controller.py controller.py
+ppy put route_controller.py route_controller.py
+ppy put setup.py setup.py
 ## ----------------------------------------------------------------------------------------------------------------------
 #ampy rm sprinkler.mpy
