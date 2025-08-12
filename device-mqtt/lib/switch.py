@@ -6,11 +6,17 @@ try:
 except ImportError:
     typ = None
 try:
-    from trigger import Trigger
     from blinker import Blinker
+except ImportError:
+    Blinker = None
+try:
+    from trigger import Trigger
+except ImportError:
+    Trigger = None
+try:
     from machine import Pin
 except ImportError:
-    Trigger = Blinker = Pin = typ.Any
+    Pin = typ.Any if typ else None
 try:
     import asyncio
 except ImportError:

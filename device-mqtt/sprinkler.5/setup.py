@@ -45,7 +45,10 @@ device = Device(config=config, mqtt=mqtt, wlan=wlan, name=name, api_type='sprink
 
 switches = [
     Switch(pin=28, id_=1, config=config, loop=loop),
-    Switch(pin=27, id_=2, config=config, loop=loop)
+    Switch(pin=27, id_=2, config=config, loop=loop),
+    Switch(pin=26, id_=3, config=config, loop=loop),
+    Switch(pin=22, id_=4, config=config, loop=loop),
+    Switch(pin=21, id_=5, config=config, loop=loop)
 ]
 
 wlan.add_connect_listener(on_connect)

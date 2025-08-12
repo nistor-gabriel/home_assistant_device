@@ -1,6 +1,7 @@
 import unittest
 import hashlib
 import json
+import re
 
 
 class Test(unittest.TestCase):
@@ -18,6 +19,9 @@ class Test(unittest.TestCase):
 
     def test1(self):
         print(json.dumps({'a': 'b', 'c': 'd'}, separators=(',', ':')))
+
+    def test2(self):
+        print(re.compile('microdot/[^/]*').match('microdot/websocket.py'))
 
 
 if __name__ == '__main__':

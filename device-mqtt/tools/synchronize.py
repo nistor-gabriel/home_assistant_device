@@ -1,5 +1,3 @@
-import os
-
 import yaml
 import subprocess
 import json
@@ -13,6 +11,7 @@ import binascii
 import click
 import base64
 import re
+import posixpath
 from ampy import pyboard, files as afiles
 
 MAX_DATA_SIZE = 8 * 1024
@@ -29,6 +28,8 @@ class Context(typ.TypedDict, total=False):
     has_error: bool
     board: pyboard.Pyboard
     board_files: afiles.Files
+    exclude_reg: typ.List[typ.Pattern]
+    only_reg: typ.List[typ.Pattern]
 
 
 ctx: Context = {}
@@ -93,27 +94,27 @@ def collect_local_resources():
         ignore_ = entry.get('ignore')
         if type_ == 'raw':
             if ignore_:
-                files.append({'file': dst, 'ignore': True, 'hash': ''})
+                files.append({'file': posixpath.normpath(dst), 'ignore': True, 'hash': ''})
             else:
                 add_raw(path_src, ctx['dist'].joinpath(dst).resolve().absolute(), ctx['dist'], file_names)
         elif type_ == 'gzip':
             if ignore_:
-                files.append({'file': dst + '.gz', 'ignore': True, 'hash': ''})
+                files.append({'file': posixpath.normpath(dst + '.gz'), 'ignore': True, 'hash': ''})
             else:
                 add_gzip(path_src, ctx['dist'].joinpath(dst).resolve().absolute(), ctx['dist'], file_names)
         elif path_src.name.endswith('.py'):
             if ignore_:
-                files.append({'file': dst.rstrip('.py') + '.mpy', 'ignore': True, 'hash': ''})
+                files.append({'file': posixpath.normpath(dst.rstrip('.py') + '.mpy'), 'ignore': True, 'hash': ''})
             else:
                 add_py(src, path_src, ctx['dist'].joinpath(dst).resolve().absolute(), ctx['dist'], file_names)
         elif path_src.name.endswith('.json'):
             if ignore_:
-                files.append({'file': dst, 'ignore': True, 'hash': ''})
+                files.append({'file': posixpath.normpath(dst), 'ignore': True, 'hash': ''})
             else:
                 add_json(path_src, ctx['dist'].joinpath(dst).resolve().absolute(), ctx['dist'], file_names)
 
     for file in file_names:
-        files.append({'file': file, 'hash': hash_file(ctx['dist'].joinpath(file))})
+        files.append({'file': posixpath.normpath(file), 'hash': hash_file(ctx['dist'].joinpath(file))})
 
     return files
 
@@ -142,7 +143,7 @@ def collect_serial_resources():
     for f in ctx['board_files'].ls('/', long_format=False, recursive=True):
         name = f[1:]
         if cache:
-            cached_file = ctx['cache'].joinpath(name)
+            cached_file = cache.joinpath(name)
             file_hash = hash_file(cached_file)
             if not file_hash:
                 cached_file.parent.mkdir(parents=True, exist_ok=True)
@@ -157,18 +158,45 @@ def collect_serial_resources():
 
 def update_serial(to_update: typ.List[typ.Dict]):
     for item in to_update:
-        path = ctx['dist'].joinpath(item['file'])
-        with open(path, 'rb') as f:
+        if is_excluded(item['file']):
+            print('excluded file', item['file'])
+            continue
+        print('updating file', item['file'])
+        remote_parent = posixpath.normpath(posixpath.join(item['file'], '../'))
+        try:
+            # Create remote parent directory.
+            ctx['board_files'].mkdir(remote_parent)
+        except afiles.DirectoryExistsError:
+            # Ignore errors for directories that already exist.
+            pass
+
+        with open(ctx['dist'].joinpath(item['file']), 'rb') as f:
             ctx['board_files'].put(item['file'], f.read())
             ctx['has_changed'] = True
-        path.unlink(missing_ok=True)
+        if ctx.get('cache'):
+            ctx['cache'].joinpath(item['file']).unlink(missing_ok=True)
 
 
 def remove_serial(to_remove: typ.List[typ.Dict]):
     for item in to_remove:
+        if is_excluded(item['file']):
+            print('excluded file', item['file'])
+            continue
+        print('removing file', item['file'])
         ctx['board_files'].rm(item['file'])
-        ctx['dist'].joinpath(item['file']).unlink(missing_ok=True)
         ctx['has_changed'] = True
+        if ctx.get('cache'):
+            ctx['cache'].joinpath(item['file']).unlink(missing_ok=True)
+
+
+def is_excluded(file: str):
+    for reg in ctx['exclude_reg']:
+        if reg.match(file):
+            return True
+    for reg in ctx['only_reg']:
+        if not reg.match(file):
+            return True
+    return False
 
 
 # noinspection PyShadowingNames
@@ -196,6 +224,9 @@ def compare(local_files: typ.List[typ.Dict], remote_files: typ.List[typ.Dict]):
 
 def update(to_update: typ.List[typ.Dict]):
     for item in to_update:
+        if is_excluded(item['file']):
+            print('excluded file', item['file'])
+            continue
         append = False
         with open(ctx['dist'].joinpath(item['file']), 'rb') as f:
             size = 0
@@ -214,16 +245,19 @@ def update(to_update: typ.List[typ.Dict]):
                     ctx['has_error'] = True
                     ctx['has_changed'] = True
                 elif append:
-                    print('appended', item['file'], size, response.text)
+                    print('appended file', item['file'], size, response.text)
                     ctx['has_changed'] = True
                 else:
-                    print('updated', item['file'], size, response.text)
+                    print('updated file', item['file'], size, response.text)
                     ctx['has_changed'] = True
                     append = True
 
 
 def remove(to_remove: typ.List[typ.Dict]):
     for item in to_remove:
+        if is_excluded(item['file']):
+            print('excluded file', item['file'])
+            continue
         response = requests.delete(ctx['host'] + '/fs/' + item['file'],
                                    headers={'authorization': ctx['authorization']})
         if not response.ok:
@@ -231,7 +265,7 @@ def remove(to_remove: typ.List[typ.Dict]):
             ctx['has_error'] = True
             ctx['has_changed'] = True
         else:
-            print('removed', item['file'], response.text)
+            print('removed file', item['file'], response.text)
             ctx['has_changed'] = True
 
 
@@ -272,20 +306,16 @@ def cli(dist, resources, exclude, only):
     ctx['dist'] = Path(dist).resolve().absolute()
     ctx['has_changed'] = False
     ctx['has_error'] = False
+    ctx['exclude_reg'] = [re.compile(reg.replace('*', '[^/]*')) for reg in exclude]
+    ctx['only_reg'] = [re.compile(reg.replace('*', '[^/]*')) for reg in only]
 
     resc = yaml.safe_load(resources)
-    exclude_reg = [re.compile(reg.replace('*', '[^/]*')) for reg in exclude]
-    only_reg = [re.compile(reg.replace('*', '[^/]*')) for reg in only]
     for item in resc:
         if item.get('ignore'):
             continue
-        if next((reg.match(item['dst']) for reg in exclude_reg), False):
+        if is_excluded(item['dst']):
+            print('excluded file', item['dst'])
             item['ignore'] = True
-            print('excluding', item['dst'])
-
-        if next((not reg.match(item['dst']) for reg in only_reg), False):
-            item['ignore'] = True
-            print('excluding', item['dst'])
 
     ctx['resources'] = resc
 
@@ -323,8 +353,14 @@ def remote(ip, user, password, dry):
     to_update, to_remove = compare(local_files, remote_files)
     if dry:
         for item in to_update:
+            if is_excluded(item['file']):
+                print('excluded file', item['file'])
+                continue
             print('updating file', item['file'])
         for item in to_remove:
+            if is_excluded(item['file']):
+                print('excluded file', item['file'])
+                continue
             print('removing file', item['file'])
         if not len(to_update) or not len(to_remove):
             print('Device is up to date, no updates required')
@@ -370,8 +406,14 @@ def serial(port, cache, dry):
     to_update, to_remove = compare(local_files, serial_files)
     if dry:
         for item in to_update:
+            if is_excluded(item['file']):
+                print('excluded file', item['file'])
+                continue
             print('updating file', item['file'])
         for item in to_remove:
+            if is_excluded(item['file']):
+                print('excluded file', item['file'])
+                continue
             print('removing file', item['file'])
         if not len(to_update) or not len(to_remove):
             print('Device is up to date, no updates required')
@@ -384,6 +426,12 @@ def serial(port, cache, dry):
             print('Done with errors, pleas try again!')
         else:
             print('All Done, rebooting device!')
+
+    board.enter_raw_repl()
+    board.exec_raw_no_follow('''
+import machine
+machine.reset()''')
+    board.exit_raw_repl()
 
 
 if __name__ == '__main__':

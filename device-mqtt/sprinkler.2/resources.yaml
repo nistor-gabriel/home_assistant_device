@@ -16,12 +16,6 @@
   src: ../lib/util.py
 - dst: device.py
   src: ../lib/device.py
-- dst: trigger.py
-  src: ../lib/trigger.py
-- dst: trigger_button_toggle.py
-  src: ../lib/trigger_button_toggle.py
-- dst: blinker.py
-  src: ../lib/blinker.py
 - dst: switch.py
   src: ../lib/switch.py
 - dst: main.py
@@ -56,9 +50,6 @@
 - dst: device_config.json
   src: ../lib/device_config.json
 
-- dst: controller.py
-- dst: route_controller.py
-- dst: controller_config.json
 - dst: setup.py
 
 - dst: web-ui/index.html

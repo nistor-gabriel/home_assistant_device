@@ -14,14 +14,14 @@ export default defineConfig({
     })],
   resolve: {
     mainFields: [],
-    alias: { // ../../lib/web-ui/src
+    alias: {
       '@/gardencore': path.resolve(__dirname, './src/gardencore'),
       '@': path.resolve(__dirname, '../../lib/web-ui/src'),
     },
   },
   server: {
     proxy: {
-      '^/(api|stats|mqtt|wlan|pump.*|switch.*|fs.*)$': { target: 'http://192.168.100.80' }, // ^/(api|stats|mqtt|wlan|fs)$ // http://192.168.100.76 http://192.168.4.1
+      '^/(api|stats|mqtt|wlan|pump.*|switch.*|fs.*)$': { target: 'http://192.168.100.76' }, // ^/(api|stats|mqtt|wlan|fs)$ // http://192.168.100.76 http://192.168.4.1
     },
   },
   build: {

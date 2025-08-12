@@ -5,8 +5,8 @@ ROOT="$( cd $ROOT_PROJ && cd ../.. && pwd )"
 
 . ./env-device.sh
 
-#ppy put ../vendor/microdot.py microdot.py
-#ppy put ../vendor/umqttsimple.py umqttsimple.py
+ppy put ../vendor/microdot.py microdot.py
+ppy put ../vendor/umqttsimple.py umqttsimple.py
 ## ----------------------------------------------------------------------------------------------------------------------
 #ppy put ../lib/config.py config.py
 #ppy put ../lib/wlan.py wlan.py
@@ -23,7 +23,7 @@ ROOT="$( cd $ROOT_PROJ && cd ../.. && pwd )"
 #ppy put ../lib/route_api.py route_api.py
 #ppy put ../lib/route_stats.py route_stats.py
 #ppy put ../lib/route_mqtt.py route_mqtt.py
-ppy put ../lib/route_fs.py route_fs.py
+#ppy put ../lib/route_fs.py route_fs.py
 #ppy put ../lib/route_wlan.py route_wlan.py
 #ppy put ../lib/route_ui.py route_ui.py
 #ppy put ../lib/route_switch.py route_switch.py
