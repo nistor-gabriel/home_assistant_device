@@ -1,6 +1,6 @@
 import unittest
-import os
 import hashlib
+import json
 
 
 class Test(unittest.TestCase):
@@ -15,6 +15,9 @@ class Test(unittest.TestCase):
                     break
                 sha1.update(data)
         print("MD5: {0}".format(sha1.hexdigest()))
+
+    def test1(self):
+        print(json.dumps({'a': 'b', 'c': 'd'}, separators=(',', ':')))
 
 
 if __name__ == '__main__':

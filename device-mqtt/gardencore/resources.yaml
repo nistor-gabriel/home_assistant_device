@@ -1,0 +1,87 @@
+- dst: microdot.py
+  src: ../vendor/microdot.py
+- dst: umqttsimple.py
+  src: ../vendor/umqttsimple.py
+
+- dst: config.py
+  src: ../lib/config.py
+- dst: wlan.py
+  src: ../lib/wlan.py
+- dst: auth.py
+  src: ../lib/auth.py
+
+- dst: mqtt_repo.py
+  src: ../lib/mqtt_repo.py
+- dst: util.py
+  src: ../lib/util.py
+- dst: device.py
+  src: ../lib/device.py
+- dst: trigger.py
+  src: ../lib/trigger.py
+- dst: trigger_button_toggle.py
+  src: ../lib/trigger_button_toggle.py
+- dst: blinker.py
+  src: ../lib/blinker.py
+- dst: switch.py
+  src: ../lib/switch.py
+- dst: main.py
+  src: ../lib/main.py
+  type: raw
+
+- dst: route_api.py
+  src: ../lib/route_api.py
+- dst: route_stats.py
+  src: ../lib/route_stats.py
+- dst: route_mqtt.py
+  src: ../lib/route_mqtt.py
+- dst: route_fs.py
+  src: ../lib/route_fs.py
+- dst: route_wlan.py
+  src: ../lib/route_wlan.py
+- dst: route_ui.py
+  src: ../lib/route_ui.py
+- dst: route_switch.py
+  src: ../lib/route_switch.py
+
+- dst: stats_config.json
+  src: ../lib/stats_config.json
+- dst: wlan_config.json
+  src: ../lib/wlan_config.json
+- dst: switch_config.json
+  src: ../lib/switch_config.json
+- dst: switch_stats_config.json
+  src: ../lib/switch_stats_config.json
+- dst: device_template.json
+  src: ../lib/device_template.json
+- dst: device_config.json
+  src: ../lib/device_config.json
+
+- dst: controller.py
+- dst: route_controller.py
+- dst: controller_config.json
+- dst: setup.py
+
+- dst: web-ui/index.html
+  src: web-ui/dist/index.html
+  type: gzip
+- dst: web-ui/favicon.ico
+  src: web-ui/dist/favicon.ico
+  type: gzip
+- dst: web-ui/index.js
+  src: web-ui/dist/index.js
+  type: gzip
+- dst: web-ui/index.css
+  src: web-ui/dist/index.css
+  type: gzip
+
+#- dst: web-ui/index.html
+#  ignore: true
+#- dst: web-ui/favicon.ico
+#  ignore: true
+#- dst: web-ui/index.js
+#  ignore: true
+#- dst: web-ui/index.css
+#  ignore: true
+
+- dst: config.json
+  ignore: true

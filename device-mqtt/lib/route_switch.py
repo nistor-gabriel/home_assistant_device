@@ -74,7 +74,6 @@ def install_switches(app: Microdot, auth: Auth, mqtt: MQTTRepo, device: Device, 
 
     def publish_switch(switch: Switch):
         path = mqtt_switch_path(switch)
-
         mqtt.put(path, 'ON' if switch.is_on() else 'OFF')
         mqtt.put(path + '/status', 'offline' if switch.is_disabled() else 'online')
         mqtt.put_obj(path + '/stats', {

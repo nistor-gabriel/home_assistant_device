@@ -127,5 +127,5 @@ class Device:
             msg_str = json.dumps(msg)
             topic = topic % vars
             msg_str = msg_str % vars
-            self._mqtt.put(topic, '')
-            self._mqtt.put(topic, msg_str)
+            self._mqtt.put(topic, '', lazy=False)
+            self._mqtt.put(topic, msg_str, lazy=False)

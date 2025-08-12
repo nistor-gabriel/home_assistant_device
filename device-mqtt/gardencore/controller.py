@@ -128,7 +128,7 @@ class Controller:
                 self._off_high_time = 0
 
     def setup(self):
-        self._switch_pump.add_listener(lambda is_on: self._switch_on() if is_on else self._switch_off())
+        self._switch_pump.add_listener(lambda switch: self._switch_on() if switch.is_on() else self._switch_off())
         self._loop.create_task(self._run())
 
     async def _run(self):

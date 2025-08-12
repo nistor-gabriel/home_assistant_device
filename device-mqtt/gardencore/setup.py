@@ -15,6 +15,7 @@ from route_api import install_api
 from route_wlan import install_wlan
 from route_ui import install_ui
 from route_switch import install_switches
+from route_controller import install_controller
 import util
 
 try:
@@ -74,6 +75,7 @@ install_api(app=app, auth=auth, device=device, loop=loop)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
 install_wlan(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
 install_switches(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop, switches=[switch_light, switch_pump])
+install_controller(app=app, auth=auth, controller=controller, mqtt=mqtt, device=device)
 install_fs(app=app, auth=auth)
 install_ui(app=app, auth=auth)
 

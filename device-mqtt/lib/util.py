@@ -76,6 +76,20 @@ def format_date(curt: time.struct_time):
     return '{}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.000Z'.format(tm_year, tm_mon, tm_day, tm_hour, tm_min, tm_sec)
 
 
+def as_float(msg: str, target: str = ''):
+    try:
+        return float(msg)
+    except ValueError as e:
+        print('ERROR: invalid', target, 'number received', msg, e)
+
+
+def as_int(msg: str, target: str = ''):
+    try:
+        return int(msg)
+    except ValueError as e:
+        print('ERROR: invalid int', target, 'number received', msg, e)
+
+
 def is_str(value, min_len: int | None = None, max_len: int | None = None):
     if not isinstance(value, str):
         return False

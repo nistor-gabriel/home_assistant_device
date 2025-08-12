@@ -368,19 +368,19 @@ lock:
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 
-mqtt:
-  - number:
-      name: Light Auto-Off in
-      command_topic: device/e6614103e7178d24/switch/2/set
-      icon: mdi:sleep
-      min: 0
-      max: 43200
-      step: 1
-      mode: box
-      unit_of_measurement: seconds
-      optimistic: false
-      qos: 1
-      retain: false
+# mqtt:
+#   - number:
+#       name: Light Auto-Off in
+#       command_topic: device/e6614103e7178d24/switch/2/set
+#       icon: mdi:sleep
+#       min: 0
+#       max: 43200
+#       step: 1
+#       mode: box
+#       unit_of_measurement: seconds
+#       optimistic: false
+#       qos: 1
+#       retain: false
 
 # mqtt:
 #   switch:

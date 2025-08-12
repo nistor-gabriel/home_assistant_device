@@ -5,6 +5,7 @@
 
 ubuntu-25.04-preinstalled-server-arm64+raspi.img
 __dist__
+__cache__
 
 # Node artifact files
 node_modules/

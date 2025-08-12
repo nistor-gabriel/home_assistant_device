@@ -23,7 +23,7 @@ ROOT="$( cd $ROOT_PROJ && cd ../.. && pwd )"
 #ppy put ../lib/route_api.py route_api.py
 #ppy put ../lib/route_stats.py route_stats.py
 #ppy put ../lib/route_mqtt.py route_mqtt.py
-#ppy put ../lib/route_fs.py route_fs.py
+ppy put ../lib/route_fs.py route_fs.py
 #ppy put ../lib/route_wlan.py route_wlan.py
 #ppy put ../lib/route_ui.py route_ui.py
 #ppy put ../lib/route_switch.py route_switch.py
@@ -34,10 +34,10 @@ ROOT="$( cd $ROOT_PROJ && cd ../.. && pwd )"
 #pjson put ../lib/switch_stats_config.json switch_stats_config.json
 #pjson put ../lib/device_template.json device_template.json
 #pjson put ../lib/device_config.json device_config.json
-#pjson put ../wlan_config.json config.json
 ## ----------------------------------------------------------------------------------------------------------------------
-ppy put controller.py controller.py
-ppy put route_controller.py route_controller.py
-ppy put setup.py setup.py
+#ppy put controller.py controller.py
+#ppy put route_controller.py route_controller.py
+#pjson put controller_config.json controller_config.json
+#ppy put setup.py setup.py
 ## ----------------------------------------------------------------------------------------------------------------------
 #ampy rm sprinkler.mpy

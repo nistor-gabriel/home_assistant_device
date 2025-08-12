@@ -28,13 +28,20 @@ from umqttsimple import MQTTClient
 from wlan import Wlan
 
 
+class DataEntry:
+
+    def __init__(self, msg: str, lazy: bool):
+        self.msg = msg
+        self.lazy = lazy
+
+
 class MQTTRepo:
 
     def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 0.5,
                  interval_mqtt_reconnect: float = 30, interval_mqtt_keepalive: float = 60):
         self._wlan = wlan
         self._loop = loop
-        self._data: typ.Dict[str, str] = {}
+        self._data: typ.Dict[str, DataEntry] = {}
         self._server = config.create('mqtt_server', '')
         self._port = config.create('mqtt_port', 0)
         self._user = config.create('mqtt_user', '')
@@ -153,15 +160,20 @@ class MQTTRepo:
             else:
                 await asyncio.sleep(self._interval_mqtt_reconnect)
 
-    def _publish(self, topic: str, msg: str):
+    def _publish(self, topic: str, msg: str, lazy: bool):
         if self._client:
+            if lazy:
+                data = self._data.get(topic)
+                if data and data.msg == msg:
+                    return
             try:
                 self._client.publish(topic, msg, True, 1)
             except Exception as e:
                 print('ERROR: exception occurred on publish:', e)
                 self._disconnect()
-        else:
-            self._data[topic] = msg
+
+        if not self._client or lazy:
+            self._data[topic] = DataEntry(msg, lazy)
 
     def _subscribe(self, topic: str):
         if self._client:
@@ -177,8 +189,10 @@ class MQTTRepo:
         for topic in self._subscriptions:
             self._subscribe(topic)
         for topic in list(self._data.keys()):
-            self._publish(topic, self._data[topic])
-            del self._data[topic]
+            data = self._data[topic]
+            self._publish(topic, data.msg, False)
+            if not data.lazy:
+                del self._data[topic]
 
     def _disconnect(self):
         if self._client:
@@ -203,9 +217,9 @@ class MQTTRepo:
         self._subscribe(topic)
         # print('DEBUG: subscribed to topic', topic, 'with call back', cb)
 
-    def put(self, topic: str, msg: str):
+    def put(self, topic: str, msg: str, lazy: bool = True):
         topic = topic % {'id': self.get_active_client_id()}
-        self._publish(topic, msg)
+        self._publish(topic, msg, lazy)
 
-    def put_obj(self, topic: str, obj):
-        self.put(topic, json.dumps(obj))
+    def put_obj(self, topic: str, obj, lazy: bool = True):
+        self.put(topic, json.dumps(obj, separators=(',', ':')), lazy)

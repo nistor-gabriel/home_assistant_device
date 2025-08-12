@@ -55,7 +55,7 @@ def install_fs(app: Microdot, auth: Auth):
         except OSError:
             if not mkdir(path):
                 return 'Bad Path', 400
-        f = open(path, 'w')
+        f = open(path, 'ab' if request.query_string and request.query_string.find('append=true') >= 0 else 'wb')
         f.write(request.body)
         f.close()
         return '', 204
