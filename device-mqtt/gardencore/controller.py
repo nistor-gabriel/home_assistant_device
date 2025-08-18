@@ -54,6 +54,9 @@ class Controller:
     def get_off_low_pressure(self):
         return self._off_low_pressure.get()
 
+    def get_interval_update_pressure(self):
+        return self._interval_update_pressure
+
     def set_off_low_pressure(self, off_low_pressure: float):
         if not util.is_float(off_low_pressure, min_value=0, max_ex_value=self._off_high_pressure.get()):
             print('ERROR: invalid off low pressure')
@@ -138,9 +141,12 @@ class Controller:
             self._pressure = round(pressure / 10000, 2)
             if has_changed:
                 self._listeners.notify('pressureUpdate')
-            if not self._disabled_low_watchdog.get() or not self._disabled_high_watchdog:
+            if not self._disabled_low_watchdog.get() or not self._disabled_high_watchdog.get():
                 if self._is_pump_on:
-                    if pressure <= self._off_low_pressure.get():
+                    pressure = float(self._pressure)
+                    high_pressure = float(self._off_high_pressure.get())
+                    low_pressure = float(self._off_low_pressure.get())
+                    if pressure <= low_pressure:
                         if not self._disabled_low_watchdog.get():
                             if self._off_low_time <= 0:
                                 self._switch_pump.off()
@@ -150,7 +156,7 @@ class Controller:
                                 self._listeners.notify(self._last_issue)
                             else:
                                 self._off_low_time -= 1
-                    elif pressure >= self._off_high_pressure.get():
+                    elif pressure >= high_pressure:
                         if not self._disabled_high_watchdog.get():
                             if self._off_high_time <= 0:
                                 self._switch_pump.off()
@@ -159,18 +165,22 @@ class Controller:
                             else:
                                 self._off_high_time -= 1
                     else:
-                        self._off_low_time = self._off_low_period.get()
-                        self._off_high_time = self._off_high_period.get()
+                        self._off_low_time = int(self._off_low_period.get() / self._interval_update_pressure)
+                        self._off_high_time = int(self._off_high_period.get() / self._interval_update_pressure)
 
             await asyncio.sleep(self._interval_update_pressure)
 
     def _switch_on(self):
         self._last_issue = None
-        self._off_low_time = self._off_low_start_period.get() + self._off_low_period.get()
-        self._off_high_time = self._off_high_period.get()
+        self._off_low_time = int(
+            (self._off_low_start_period.get() + self._off_low_period.get()) / self._interval_update_pressure)
+        self._off_high_time = int(self._off_high_period.get() / self._interval_update_pressure)
         self._is_pump_on = True
+        self._listeners.notify('pumpOn')
+        print('DEBUG: started pump off high time', self._off_high_time)
 
     def _switch_off(self):
         self._off_low_time = 0
         self._off_high_time = 0
         self._is_pump_on = False
+        self._listeners.notify('pumpOff')

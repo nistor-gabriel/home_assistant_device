@@ -1,0 +1,321 @@
+uda_toata_curtea:
+  sequence:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1_stoptimeoutenabled
+      - switch.front_sprinkler_2_stoptimeoutenabled
+      - switch.front_sprinkler_1_stoptimeoutenabled
+      - switch.back_sprinkler_3_stoptimeoutenabled
+      - switch.back_sprinkler_2_stoptimeoutenabled
+      - switch.back_sprinkler_1_stoptimeoutenabled
+      - switch.back_sprinkler_4_stoptimeoutenabled
+      - switch.back_sprinkler_5_stoptimeoutenabled
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1
+      - switch.front_sprinkler_2
+  - delay:
+      hours: 0
+      minutes: 7
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_sprinkler_2
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_sprinkler_1
+  - delay:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_sprinkler_1
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_3
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_sprinkler_1
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_3
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_3
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_2
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_2
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_1
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_1
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_4
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_4
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_5
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.back_sprinkler_5
+      - switch.fantana_1
+  alias: Uda toata curtea
+  description: ''
+uda_in_fata_curtea:
+  sequence:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1_stoptimeoutenabled
+      - switch.front_sprinkler_2_stoptimeoutenabled
+      - switch.front_sprinkler_1_stoptimeoutenabled
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1
+      - switch.front_sprinkler_2
+  - delay:
+      hours: 0
+      minutes: 7
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_sprinkler_2
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.front_sprinkler_1
+  - delay:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1
+      - switch.front_sprinkler_1
+  alias: 'Uda curtea in fata '
+  description: ''
+uda_curtea_in_spate:
+  sequence:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1_stoptimeoutenabled
+      - switch.back_sprinkler_3_stoptimeoutenabled
+      - switch.back_sprinkler_2_stoptimeoutenabled
+      - switch.back_sprinkler_1_stoptimeoutenabled
+      - switch.back_sprinkler_4_stoptimeoutenabled
+      - switch.back_sprinkler_5_stoptimeoutenabled
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1
+      - switch.back_sprinkler_3
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_3
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_2
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_2
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_1
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_1
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_4
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_4
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.back_sprinkler_5
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.back_sprinkler_5
+      - switch.fantana_1
+  alias: Uda curtea in spate
+  description: ''
+uda_stop:
+  sequence:
+  - action: script.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - script.uda_in_fata_curtea
+      - script.uda_curtea_in_spate
+      - script.uda_toata_curtea
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - switch.fantana_1
+      - switch.front_sprinkler_2
+      - switch.front_sprinkler_1
+      - switch.back_sprinkler_3
+      - switch.back_sprinkler_2
+      - switch.back_sprinkler_1
+      - switch.back_sprinkler_4
+      - switch.back_sprinkler_5
+  alias: Uda Stop
+  description: ''

@@ -20,8 +20,9 @@ mkdir -p $ROOT_DIST
 # ----------------------------------------------------------------------------------------------------------------------
 
 cd $ROOT_PROJ
-$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" remote -u admin -p admin 192.168.100.81
-#$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" remote --dry true -u user -p sigma2000 192.168.100.81
+
+$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" remote -u admin -p sigma2000 192.168.100.81
+
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" -e "web-ui/*" -e "microdot/*" -e "microdot*" remote --dry true -u user -p sigma2000 192.168.100.81
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" -e "web-ui/*" -e "microdot/*" -e "microdot*" remote -u user -p sigma2000 192.168.100.81
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" remote -u admin -p admin 192.168.100.81
@@ -34,4 +35,6 @@ $PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" remote -u admin -p admin 
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" serial -c "$ROOT_CACHE" --dry true /dev/ttyACM0
 
 chown -R nistor-gabriel:nistor-gabriel $ROOT_DIST
-chown -R nistor-gabriel:nistor-gabriel $ROOT_CACHE
+if [ -d "$ROOT_CACHE" ]; then
+  chown -R nistor-gabriel:nistor-gabriel $ROOT_CACHE
+fi

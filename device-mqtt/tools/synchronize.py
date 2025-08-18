@@ -352,17 +352,22 @@ def remote(ip, user, password, dry):
 
     to_update, to_remove = compare(local_files, remote_files)
     if dry:
+        has_changed = False
         for item in to_update:
             if is_excluded(item['file']):
                 print('excluded file', item['file'])
                 continue
             print('updating file', item['file'])
+            has_changed = True
         for item in to_remove:
             if is_excluded(item['file']):
                 print('excluded file', item['file'])
                 continue
             print('removing file', item['file'])
-        if not len(to_update) or not len(to_remove):
+            has_changed = True
+        if has_changed:
+            print('All Done!')
+        else:
             print('Device is up to date, no updates required')
     else:
         update(to_update)
@@ -405,17 +410,22 @@ def serial(port, cache, dry):
 
     to_update, to_remove = compare(local_files, serial_files)
     if dry:
+        has_changed = False
         for item in to_update:
             if is_excluded(item['file']):
                 print('excluded file', item['file'])
                 continue
             print('updating file', item['file'])
+            has_changed = True
         for item in to_remove:
             if is_excluded(item['file']):
                 print('excluded file', item['file'])
                 continue
             print('removing file', item['file'])
-        if not len(to_update) or not len(to_remove):
+            has_changed = True
+        if has_changed:
+            print('All Done!')
+        else:
             print('Device is up to date, no updates required')
     else:
         update_serial(to_update)

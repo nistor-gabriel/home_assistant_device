@@ -1,0 +1,24 @@
+{
+  "homeassistant/sensor/%(device_id)s/lastissue/config": {
+    "name": "Last Pump issue",
+    "state_topic": "device/%(device_id)s/lastissue",
+    "availability": [
+      {
+        "topic": "device/%(device_id)s/lastissue",
+        "payload_available": "online",
+        "payload_not_available": "offline",
+        "value_template": "{{ iif(value == 'pressureLow' or value == 'pressureHigh', 'online', 'offline') }}"
+      },
+      {
+        "topic": "device/%(device_id)s/status",
+        "payload_available": "online",
+        "payload_not_available": "offline"
+      }
+    ],
+    "availability_mode": "all",
+    "unique_id": "%(device_id)s_lastissue",
+    "object_id": "%(device_id)s_lastissue",
+    "icon": "mdi:alert-circle",
+    "value_template": "{{ iif(value == 'pressureLow', 'Stopped due to LOW pressure', iif(value == 'pressureHigh', 'Stopped due to HIGH pressure', '')) }}"
+  }
+}

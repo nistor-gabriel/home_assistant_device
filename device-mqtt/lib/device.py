@@ -34,9 +34,12 @@ class Device:
         ]] = {
             'device_config.json': None,
         }
+        self._has_published = False
 
         def publish_device_config():
-            self.publish_device_config()
+            if not self._has_published:
+                self._has_published = True
+                self.publish_device_config()
 
         mqtt.add_connected_listener(publish_device_config)
 

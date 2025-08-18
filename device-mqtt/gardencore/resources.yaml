@@ -59,6 +59,7 @@
 - dst: controller.py
 - dst: route_controller.py
 - dst: controller_config.json
+- dst: lastissue_config.json
 - dst: setup.py
 
 - dst: web-ui/index.html

@@ -21,35 +21,33 @@ def install_controller(app: Microdot, auth: Auth, controller: Controller, mqtt: 
             controller.set_disabled_low_watchdog(True)
         else:
             controller.set_disabled_low_watchdog(False)
+        mqtt.put(path_disabled_low_watchdog, 'ON' if controller.get_disabled_low_watchdog() else 'OFF')
 
     def cb_disabled_high_watchdog(_topic: str, msg: str):
         if msg == 'ON':
             controller.set_disabled_high_watchdog(True)
         else:
             controller.set_disabled_high_watchdog(False)
+        mqtt.put(path_disabled_high_watchdog, 'ON' if controller.get_disabled_high_watchdog() else 'OFF')
 
     def cb_off_high_pressure(_topic: str, msg: str):
         controller.set_off_high_pressure(util.as_float(msg, 'off high pressure'))
+        mqtt.put(path_off_high_pressure, str(controller.get_off_high_pressure()))
 
     def cb_off_high_period(_topic: str, msg: str):
         controller.set_off_high_period(util.as_int(msg, 'off high period'))
+        mqtt.put(path_off_high_period, str(controller.get_off_high_period()))
 
     def cb_off_low_pressure(_topic: str, msg: str):
         controller.set_off_low_pressure(util.as_float(msg, 'off low pressure'))
+        mqtt.put(path_off_low_pressure, str(controller.get_off_low_pressure()))
 
     def cb_off_low_start_period(_topic: str, msg: str):
         controller.set_off_low_start_period(util.as_int(msg, 'off low start period'))
+        mqtt.put(path_off_low_start_period, str(controller.get_off_low_start_period()))
 
     def cb_off_low_period(_topic: str, msg: str):
         controller.set_off_low_period(util.as_int(msg, 'off low period'))
-
-    def publish_controller():
-        mqtt.put(path_disabled_low_watchdog, 'ON' if controller.get_disabled_low_watchdog() else 'OFF')
-        mqtt.put(path_disabled_high_watchdog, 'ON' if controller.get_disabled_high_watchdog() else 'OFF')
-        mqtt.put(path_off_high_pressure, str(controller.get_off_high_pressure()))
-        mqtt.put(path_off_high_period, str(controller.get_off_high_period()))
-        mqtt.put(path_off_low_pressure, str(controller.get_off_low_pressure()))
-        mqtt.put(path_off_low_start_period, str(controller.get_off_low_start_period()))
         mqtt.put(path_off_low_period, str(controller.get_off_low_period()))
 
     def listener(event: str):
@@ -57,10 +55,25 @@ def install_controller(app: Microdot, auth: Auth, controller: Controller, mqtt: 
             mqtt.put('device/%(id)s/lastissue', str(controller.get_last_issue()))
         elif event == 'pressureUpdate':
             mqtt.put('device/%(id)s/pressure', str(controller.get_pressure()))
+        elif event == 'pumpOn':
+            mqtt.put('device/%(id)s/lastissue', '')
 
-    publish_controller()
+    def config_vars():
+        yield {
+            'interval_update_pressure': controller.get_interval_update_pressure()
+        }
+
+    mqtt.put(path_disabled_low_watchdog, 'ON' if controller.get_disabled_low_watchdog() else 'OFF')
+    mqtt.put(path_disabled_high_watchdog, 'ON' if controller.get_disabled_high_watchdog() else 'OFF')
+    mqtt.put(path_off_high_pressure, str(controller.get_off_high_pressure()))
+    mqtt.put(path_off_high_period, str(controller.get_off_high_period()))
+    mqtt.put(path_off_low_pressure, str(controller.get_off_low_pressure()))
+    mqtt.put(path_off_low_start_period, str(controller.get_off_low_start_period()))
+    mqtt.put(path_off_low_period, str(controller.get_off_low_period()))
+
     controller.add_listener(listener)
-    device.add_config('controller_config.json')
+    device.add_config('controller_config.json', config_vars)
+    device.add_config('lastissue_config.json')
     mqtt.subscribe(path_disabled_low_watchdog + '/set', cb_disabled_low_watchdog)
     mqtt.subscribe(path_disabled_high_watchdog + '/set', cb_disabled_high_watchdog)
     mqtt.subscribe(path_off_high_pressure + '/set', cb_off_high_pressure)
@@ -98,46 +111,46 @@ def install_controller(app: Microdot, auth: Auth, controller: Controller, mqtt: 
             if disabled_low_watchdog is util.INVALID:
                 return {'disabledLowWatchdog': 'invalid'}, 400
             controller.set_disabled_low_watchdog(disabled_low_watchdog)
-            publish_controller()
+            mqtt.put(path_disabled_low_watchdog, 'ON' if controller.get_disabled_low_watchdog() else 'OFF')
 
         disabled_high_watchdog = util.get_body_bool(request.json, 'disabledHighWatchdog')
         if disabled_high_watchdog is not None:
             if disabled_high_watchdog is util.INVALID:
                 return {'disabledHighWatchdog': 'invalid'}, 400
             controller.set_disabled_high_watchdog(disabled_high_watchdog)
-            publish_controller()
+            mqtt.put(path_disabled_high_watchdog, 'ON' if controller.get_disabled_high_watchdog() else 'OFF')
 
         off_low_pressure = util.get_body_float(request.json, 'offLowPressure')
         if off_low_pressure is not None:
             if off_low_pressure is util.INVALID or not controller.set_off_low_pressure(off_low_pressure):
                 return {'offLowPressure': 'invalid'}, 400
             else:
-                publish_controller()
+                mqtt.put(path_off_low_pressure, str(controller.get_off_low_pressure()))
 
         off_low_period = util.get_body_float(request.json, 'offLowPeriod')
         if off_low_period is not None:
             if off_low_period is util.INVALID or not controller.set_off_low_period(off_low_period):
                 return {'offLowPeriod': 'invalid'}, 400
             else:
-                publish_controller()
+                mqtt.put(path_off_low_period, str(controller.get_off_low_period()))
 
         off_low_start_period = util.get_body_float(request.json, 'offLowStartPeriod')
         if off_low_start_period is not None:
             if off_low_start_period is util.INVALID or not controller.set_off_low_start_period(off_low_start_period):
                 return {'offLowStartPeriod': 'invalid'}, 400
             else:
-                publish_controller()
+                mqtt.put(path_off_low_start_period, str(controller.get_off_low_start_period()))
 
         off_high_pressure = util.get_body_float(request.json, 'offHighPressure')
         if off_high_pressure is not None:
             if off_high_pressure is util.INVALID or not controller.set_off_high_pressure(off_high_pressure):
                 return {'offHighPressure': 'invalid'}, 400
             else:
-                publish_controller()
+                mqtt.put(path_off_high_pressure, str(controller.get_off_high_pressure()))
 
         off_high_period = util.get_body_float(request.json, 'offHighPeriod')
         if off_high_period is not None:
             if off_high_period is util.INVALID or not controller.set_off_high_period(off_high_period):
                 return {'offHighPeriod': 'invalid'}, 400
             else:
-                publish_controller()
+                mqtt.put(path_off_high_period, str(controller.get_off_high_period()))

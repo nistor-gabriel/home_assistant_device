@@ -13,12 +13,16 @@ PYTHON=$ROOT/venv/bin/python
 cd $ROOT_PROJ/web-ui
 #npm run build
 cd dist
+chown -R nistor-gabriel:nistor-gabriel .
 rm -R -f $ROOT_DIST
 mkdir -p $ROOT_DIST
 
 # ----------------------------------------------------------------------------------------------------------------------
 
 cd $ROOT_PROJ
+
+$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" remote -u admin -p sigma2000 192.168.100.80
+
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" -e "web-ui/*" remote -u user -p sigma2000 192.168.100.80
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" -e "web-ui/*" remote --dry true -u user -p sigma2000 192.168.100.80
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" -o "microdot.*" remote --dry true -u user -p sigma2000 192.168.100.80
@@ -28,5 +32,10 @@ cd $ROOT_PROJ
 
 #$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" -e "web-ui/*" serial -c "$ROOT_CACHE" --dry true /dev/ttyACM0
 
-#$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" serial -c "$ROOT_CACHE" --dry true /dev/ttyACM0
-$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" serial -c "$ROOT_CACHE" /dev/ttyACM0
+#$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" -e "web-ui/*" serial -c "$ROOT_CACHE" /dev/ttyACM0
+#$PYTHON $ROOT_DEV/tools/synchronize.py -d "$ROOT_DIST" serial -c "$ROOT_CACHE" /dev/ttyACM0
+
+chown -R nistor-gabriel:nistor-gabriel $ROOT_DIST
+if [ -d "$ROOT_CACHE" ]; then
+  chown -R nistor-gabriel:nistor-gabriel $ROOT_CACHE
+fi
