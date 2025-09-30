@@ -12,6 +12,7 @@ except ImportError:
 try:
     import asyncio
 except ImportError:
+    # noinspection PyUnresolvedReferences
     import uasyncio as asyncio
 
 

@@ -5,6 +5,7 @@ except ImportError:
 try:
     import asyncio
 except ImportError:
+    # noinspection PyUnresolvedReferences
     import uasyncio as asyncio
 try:
     import ubinascii
@@ -16,10 +17,6 @@ try:
 except ImportError:
     # noinspection SpellCheckingInspection
     machine = typ.Any
-try:
-    import asyncio
-except ImportError:
-    import uasyncio as asyncio
 
 import json
 import util

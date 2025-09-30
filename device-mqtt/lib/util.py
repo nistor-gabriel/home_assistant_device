@@ -7,10 +7,12 @@ except ImportError:
 try:
     import asyncio
 except ImportError:
+    # noinspection PyUnresolvedReferences
     import uasyncio as asyncio
 try:
     import ntptime
 except ImportError:
+    # noinspection SpellCheckingInspection
     ntptime = typ.Any
 
 

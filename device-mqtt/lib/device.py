@@ -11,6 +11,7 @@ except ImportError:
 try:
     import asyncio
 except ImportError:
+    # noinspection PyUnresolvedReferences
     import uasyncio as asyncio
 try:
     import machine
@@ -76,11 +77,11 @@ class Device:
         return lambda: self._publish_config(file)
 
     def publish_device_config(self):
-        vars = self._build_vars()
+        var_s = self._build_vars()
         template = self._read_template()
 
         for file in self._configs:
-            self._publish_config(file, vars=vars, template=template)
+            self._publish_config(file, var_s=var_s, template=template)
 
     def _build_vars(self):
         ip = self._wlan.get_ip()
@@ -98,23 +99,23 @@ class Device:
         with open('device_template.json') as json_file:
             return json.load(json_file)
 
-    def _publish_config(self, file: str, vars: typ.Union[typ.Dict, None] = None,
+    def _publish_config(self, file: str, var_s: typ.Union[typ.Dict, None] = None,
                         template: typ.Union[typ.Dict, None] = None):
-        if not vars:
-            vars = self._build_vars()
+        if not var_s:
+            var_s = self._build_vars()
         if not template:
             template = self._read_template()
 
         vars_source = self._configs[file]
         if vars_source:
             for vars_extra in vars_source():
-                vars_all = dict(vars)
+                vars_all = dict(var_s)
                 vars_all.update(vars_extra)
                 self._put_config(file, template, vars_all)
         else:
-            self._put_config(file, template, vars)
+            self._put_config(file, template, var_s)
 
-    def _put_config(self, file: str, template: typ.Dict, vars: typ.Dict[str, str]):
+    def _put_config(self, file: str, template: typ.Dict, var_s: typ.Dict[str, str]):
         with open(file) as json_file:
             data = json.load(json_file)
         tpl = data.get('@template')
@@ -128,7 +129,7 @@ class Device:
             msg = dict(tpl)
             msg.update(data[topic])
             msg_str = json.dumps(msg)
-            topic = topic % vars
-            msg_str = msg_str % vars
+            topic = topic % var_s
+            msg_str = msg_str % var_s
             self._mqtt.put(topic, '', lazy=False)
             self._mqtt.put(topic, msg_str, lazy=False)

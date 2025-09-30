@@ -17,6 +17,7 @@ import util
 try:
     import asyncio
 except ImportError:
+    # noinspection PyUnresolvedReferences
     import uasyncio as asyncio
 
 loop = asyncio.get_event_loop()
