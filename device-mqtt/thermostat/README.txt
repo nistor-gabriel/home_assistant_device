@@ -15,3 +15,6 @@ $ curl -v -u user:sigma2000 -X POST --data-binary "@/home/nistor-gabriel/persona
 $ curl -v -u user:sigma2000 -X POST --data-binary "@/home/nistor-gabriel/personal/work/casa/casa2/device-py/lib/util.py" http://192.168.100.71/fs/util.py
 $ curl -v -u user:sigma2000 -X POST --data-binary "@/home/nistor-gabriel/personal/work/casa/casa2/device-py/thermostat/route_thermostat.py" http://192.168.100.71/fs/route_thermostat.py
 $ curl -v -u user:sigma2000 -X POST --data-binary "@/home/nistor-gabriel/personal/work/casa/casa2/device-py/lib/wlan.py" http://192.168.100.71/fs/wlan.py
+
+
+$ curl -v -u admin:user -X PUT -H "Content-Type: application/json" -d '{"isHeatOn": true}' http://192.168.100.76/thermostat

@@ -3,7 +3,7 @@ import Moment from 'react-moment';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lightbulb } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { useGetData, cn, doModify, useTimelyRefresh, useGetEffect } from '@/lib';
+import { useGetData, cn, doModify, useTimelyRefresh, useDeltaTimeCompensation } from '@/lib';
 import * as ep from '@/lib/endpoints';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
@@ -26,15 +26,7 @@ import { AlertUpdateFailed } from '@/components/common';
 /* ========================================================================== */
 
 const DashboardSwitch: React.FC = () => {
-    const [deltaTime, setDeltaTime] = useState<number>(0);
     const [rsp, refreshSwitches] = useGetData<ep.Switch>(ep.PATH_SWITCH, 'refresh');
-
-    useGetEffect<ep.Stats>(ep.PATH_STATS, (data) => {
-        if (data) {
-            setDeltaTime(Date.now() - new Date(data.time).getTime());
-        }
-    });
-
     const refresh = useTimelyRefresh(5, refreshSwitches);
 
     const isLoading = rsp.status === 'loading';
@@ -46,9 +38,7 @@ const DashboardSwitch: React.FC = () => {
     const [hourTimeout, setHourTimeout] = useState<number | string>('');
     const [minuteTimeout, setMinuteTimeout] = useState<number | string>('');
 
-    const processDate = (sdate: string) => {
-        return deltaTime + new Date(sdate).getTime();
-    };
+    const compensateDate = useDeltaTimeCompensation();
 
     const isCustom = selectTimeout === 'custom';
 
@@ -145,9 +135,9 @@ const DashboardSwitch: React.FC = () => {
                                             </TableCell>
                                             <TableCell className="text-xs text-gray-900">{sw.on ? (
                                                 <>
-                                                    <Moment date={processDate(sw.onSince)} fromNow />
+                                                    <Moment date={compensateDate(sw.onSince)} fromNow />
                                                     {sw.stopTimeout ? (
-                                                        <> and stops <Moment date={processDate(sw.onSince) + sw.stopTimeout * 1000} fromNow /></>
+                                                        <> and stops <Moment date={compensateDate(sw.onSince) + sw.stopTimeout * 1000} fromNow /></>
                                                     ) : null}
                                                 </>
                                             ) : sw.disabled ? 'currently disabled' : null }</TableCell>
@@ -180,7 +170,7 @@ const DashboardSwitch: React.FC = () => {
                         <div className="space-y-4 mt-6">
                             <Select value={selectTimeout} onValueChange={setSelectTimeout}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select a verified email to display" />
+                                    <SelectValue placeholder="Select a switch timeout" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="custom">Custom</SelectItem>

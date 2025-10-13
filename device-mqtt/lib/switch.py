@@ -36,7 +36,7 @@ class Switch:
         self._loop = loop
         self._event = asyncio.Event()
         self._is_on = False
-        self._on_sice = None
+        self._on_since = None
         self._stop_time = 0
 
         self._pin = Pin(pin, mode=Pin.OUT)
@@ -81,7 +81,7 @@ class Switch:
         self._loop.create_task(self._run())
 
     def get_on_since(self):
-        return self._on_sice
+        return self._on_since
 
     def get_stop_time(self):
         return self._stop_time
@@ -108,7 +108,7 @@ class Switch:
                 self._blinker.on()
         if self._is_on:
             return
-        self._on_sice = time.time()
+        self._on_since = time.time()
         self._is_on = True
         self._event.set()
         self._pin.low()
@@ -117,7 +117,7 @@ class Switch:
     def off(self):
         if not self._is_on:
             return False
-        self._on_sice = None
+        self._on_since = None
         self._is_on = False
         self._pin.high()
         self._stop_time = 0
@@ -139,7 +139,7 @@ class Switch:
 
             elif self._is_on and self._stop_time:
                 ctime = time.time()
-                stop_time = self._on_sice + self._stop_time
+                stop_time = self._on_since + self._stop_time
                 if stop_time <= ctime:
                     self.off()
                 else:

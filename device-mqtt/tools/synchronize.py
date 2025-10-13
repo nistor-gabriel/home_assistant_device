@@ -142,17 +142,20 @@ def collect_serial_resources():
     cache = ctx.get('cache')
     for f in ctx['board_files'].ls('/', long_format=False, recursive=True):
         name = f[1:]
-        if cache:
-            cached_file = cache.joinpath(name)
-            file_hash = hash_file(cached_file)
-            if not file_hash:
-                cached_file.parent.mkdir(parents=True, exist_ok=True)
-                contents = ctx['board_files'].get(f)
-                cached_file.write_bytes(contents)
-            file_hash = hash_file(cached_file)
-            files.append({'file': name, 'hash': file_hash})
-        else:
-            files.append({'file': name, 'hash': ''})
+        try:
+            if cache:
+                cached_file = cache.joinpath(name)
+                file_hash = hash_file(cached_file)
+                if not file_hash:
+                    cached_file.parent.mkdir(parents=True, exist_ok=True)
+                    contents = ctx['board_files'].get(f)
+                    cached_file.write_bytes(contents)
+                file_hash = hash_file(cached_file)
+                files.append({'file': name, 'hash': file_hash})
+            else:
+                files.append({'file': name, 'hash': ''})
+        except pyboard.PyboardError as e:
+            print('failed sync on', name, e)
     return files
 
 

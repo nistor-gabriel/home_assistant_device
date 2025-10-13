@@ -1,7 +1,10 @@
 #!/bin/bash
-sudo apt install python3.8 python3.8-venv screen
-python3 -m venv ./venv
-./venv/bin/python -m pip install adafruit-ampy
-./venv/bin/python -m pip install python-minifier
-./venv/bin/python -m pip install pyyaml
-./venv/bin/python -m pip install requests
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.9 python3.9-venv screen
+python3.9 -m venv ./venv
+./venv/bin/python3.9 -m pip install adafruit-ampy
+./venv/bin/python3.9 -m pip install python-minifier
+./venv/bin/python3.9 -m pip install pyyaml
+./venv/bin/python3.9 -m pip install requests
+./venv/bin/python3.9 -m pip install mpy-cross

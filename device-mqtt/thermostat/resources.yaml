@@ -16,8 +16,8 @@
   src: ../lib/util.py
 - dst: device.py
   src: ../lib/device.py
-- dst: switch.py
-  src: ../lib/switch.py
+- dst: temperature_sensor.py
+  src: ../lib/temperature_sensor.py
 - dst: main.py
   src: ../lib/main.py
   type: raw
@@ -34,36 +34,35 @@
   src: ../lib/route_wlan.py
 - dst: route_ui.py
   src: ../lib/route_ui.py
-- dst: route_switch.py
-  src: ../lib/route_switch.py
 
 - dst: stats_config.json
   src: ../lib/stats_config.json
 - dst: wlan_config.json
   src: ../lib/wlan_config.json
-- dst: switch_config.json
-  src: ../lib/switch_config.json
-- dst: switch_stats_config.json
-  src: ../lib/switch_stats_config.json
 - dst: device_template.json
   src: ../lib/device_template.json
 - dst: device_config.json
   src: ../lib/device_config.json
 
+- dst: util_temp.py
+- dst: controller.py
+- dst: heating.py
+- dst: route_thermostat.py
+- dst: auto_schedule.py
 - dst: setup.py
 
-- dst: web-ui/index.html
-  src: web-ui/dist/index.html
-  type: gzip
-- dst: web-ui/favicon.ico
-  src: web-ui/dist/favicon.ico
-  type: gzip
-- dst: web-ui/index.js
-  src: web-ui/dist/index.js
-  type: gzip
-- dst: web-ui/index.css
-  src: web-ui/dist/index.css
-  type: gzip
+#- dst: web-ui/index.html
+#  src: web-ui/dist/index.html
+#  type: gzip
+#- dst: web-ui/favicon.ico
+#  src: web-ui/dist/favicon.ico
+#  type: gzip
+#- dst: web-ui/index.js
+#  src: web-ui/dist/index.js
+#  type: gzip
+#- dst: web-ui/index.css
+#  src: web-ui/dist/index.css
+#  type: gzip
 
 - dst: config.json
   ignore: true

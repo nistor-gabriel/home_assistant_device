@@ -1,5 +1,6 @@
 from config import Config
 import util
+import time
 
 try:
     from event import EventManager
@@ -22,33 +23,36 @@ except ImportError:
 
 class Heating:
 
-    def __init__(self, config: Config, pin_pump: int, pin_heat: int,
-                 stop_period: float, pump_cycle_period: float, offset_period: float, pump_period: float):
+    def __init__(self, config: Config, loop: asyncio.AbstractEventLoop, pin_pump: int, pin_heat: int,
+                 pump_cycle_period: float, offset_period: float, pump_period: float):
 
+        self._loop = loop
         self._pin_pump = Pin(pin_pump, mode=Pin.OUT)
         self._pin_heat = Pin(pin_heat, mode=Pin.OUT)
         self._pin_pump.high()
         self._pin_heat.high()
 
-        self._stop_period = config.create('heating_stop_period', stop_period)
         self._pump_cycle_period = config.create('heating_pump_cycle_period', pump_cycle_period)
         self._offset_period = config.create('heating_offset_period', offset_period)
         self._pump_period = config.create('heating_pump_period', pump_period)
 
+        self._listeners = util.Listeners()
+
         self._is_pump_on = False
         self._is_heat_on = False
+        self._stop_time = 0
         self._is_start_offset = False
         self._is_stop_offset = False
         self._is_auto_stop = False
         self._is_auto_stop_pump = False
-        self._offset_time = 0
-        self._stop_time = 0
-        self._pump_cycle_time = 0
+        self._on_since = None
+        self._off_since = None
 
-        self._event_manager: EventManager | None = None
+    def setup(self):
+        self._loop.create_task(self._run())
 
-    def bind_event_manager(self, event_manager: EventManager):
-        self._event_manager = event_manager
+    def add_listener(self, listener: typ.Callable[[str], None]):
+        return self._listeners.add(listener)
 
     def is_pump_on(self):
         return self._is_pump_on
@@ -56,13 +60,8 @@ class Heating:
     def is_heat_on(self):
         return self._is_heat_on
 
-    def get_stop_period(self):
-        return self._stop_period.get()
-
-    def get_stop_timeout(self):
-        if self._is_auto_stop:
-            return self._stop_period.get() - (util.uptime() - self._stop_time)
-        return 0
+    def get_stop_time(self):
+        return self._stop_time
 
     def get_pump_cycle_period(self):
         return self._pump_cycle_period.get()
@@ -70,33 +69,20 @@ class Heating:
     def get_pump_period(self):
         return self._pump_period.get()
 
-    def get_pump_cycle_timeout(self):
-        if self._is_pump_on:
-            return 0
-        return self._pump_cycle_period.get() - (util.uptime() - self._pump_cycle_time)
-
     def get_offset_period(self):
         return self._offset_period.get()
 
-    def get_offset_timeout(self):
-        if self._is_start_offset or self._is_stop_offset:
-            return self._offset_period.get() - (util.uptime() - self._offset_time)
-        return 0
+    def get_on_since(self):
+        return self._on_since
 
-    def set_stop_period(self, seconds: float):
-        if 2 * self._offset_period.get() >= seconds:
-            print('ERROR: stop period needs to be more then 2 offsets')
-            return False
-        self._stop_period.set(seconds)
-        self._dispatch()
-        return True
+    def get_off_since(self):
+        return self._off_since
 
     def set_pump_cycle_period(self, seconds: float):
-        if self._stop_period.get() >= seconds:
-            print('ERROR: cycle period needs to be more then stop period')
+        if seconds < 24 * 3600:  # Minimum time will be a day
+            print('ERROR: cycle period needs to be more then a day')
             return False
         self._pump_cycle_period.set(seconds)
-        self._dispatch()
         return True
 
     def set_pump_period(self, seconds: float):
@@ -104,19 +90,16 @@ class Heating:
             print('ERROR: pump period needs to be more then 10 seconds')
             return False
         self._pump_period.set(seconds)
-        self._dispatch()
         return True
 
     def set_offset_period(self, seconds):
-        if 2 * seconds >= self._stop_period.get():
-            print('ERROR: offset period needs to be less then half of stop period')
-            return False
         self._offset_period.set(seconds)
-        self._dispatch()
         return True
 
-    def on(self):
+    # The default heating stop period will be 1 hour, the time is in seconds.
+    def on(self, timeout: float):
         if self.on_continuously():
+            self._stop_time = timeout
             self._is_auto_stop = True
             return True
         return False
@@ -132,7 +115,6 @@ class Heating:
         self._start_pump()
         self._is_stop_offset = self._is_auto_stop_pump = False
         self._is_start_offset = True
-        self._offset_time = util.uptime()
         return True
 
     def off(self):
@@ -148,26 +130,28 @@ class Heating:
             self._stop_pump()
         return True
 
-    def _dispatch(self):
-        if self._event_manager:
-            self._event_manager.dispatch({'type': 'heating'})
-
     def _start_pump(self):
-        self._stop_time = util.uptime()
         if self._is_pump_on:
             return
         self._is_pump_on = True
         self._pin_pump.low()
-        self._dispatch()
+        self._on_since = time.time()
+        self._listeners.notify('pumpOn')
         print('started pump')
+
+    def _start_maintenance(self):
+        self._start_pump()
+        self._is_auto_stop_pump = True
 
     def _stop_pump(self):
         if not self._is_pump_on:
             return
         self._is_pump_on = self._is_auto_stop = self._is_auto_stop_pump = False
         self._pin_pump.high()
-        self._pump_cycle_time = util.uptime()
-        self._dispatch()
+        self._off_since = time.time()
+        self._on_since = None
+        self._stop_time = 0
+        self._listeners.notify('pumpOff')
         print('stopped pump')
 
     def _start_heat(self):
@@ -175,7 +159,7 @@ class Heating:
             return
         self._is_heat_on = True
         self._pin_heat.low()
-        self._dispatch()
+        self._listeners.notify('heatOn')
         print('started heat')
 
     def _stop_heat(self):
@@ -183,17 +167,18 @@ class Heating:
             return
         self._is_heat_on = False
         self._is_stop_offset = True
-        self._offset_time = util.uptime()
+        self._on_since = time.time()
         self._pin_heat.high()
-        self._dispatch()
+        self._listeners.notify('heatOff')
         print('stopped heat')
 
-    async def run(self):
-        self._pump_cycle_time = util.uptime()
+    async def _run(self):
+        await asyncio.sleep(10)  # wait 10 seconds so the time can be synchronized
+        self._start_maintenance()
         while True:
-            ctime = util.uptime()
+            ctime = time.time()
             if self._is_start_offset or self._is_stop_offset:
-                if ctime - self._offset_time >= self._offset_period.get():
+                if ctime - self._on_since >= self._offset_period.get():
                     if self._is_start_offset:
                         self._is_start_offset = False
                         self._start_heat()
@@ -202,17 +187,16 @@ class Heating:
                         self._stop_pump()
             elif self._is_pump_on:
                 if self._is_auto_stop or self._is_auto_stop_pump:
-                    delta = ctime - self._stop_time
+                    delta = ctime - self._on_since
                     if self._is_auto_stop:
-                        if delta + self._offset_period.get() >= self._stop_period.get():
+                        if delta + self._offset_period.get() >= self._stop_time:
                             self._is_auto_stop = False
                             self._stop_heat()
                     elif self._is_auto_stop_pump and delta > self._pump_period.get():
                         self._is_auto_stop_pump = False
                         self._stop_pump()
             else:
-                if ctime - self._pump_cycle_time >= self._pump_cycle_period.get():
-                    self._start_pump()
-                    self._is_auto_stop_pump = True
+                if ctime - self._off_since >= self._pump_cycle_period.get():
+                    self._start_maintenance()
 
             await asyncio.sleep(1)

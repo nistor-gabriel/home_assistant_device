@@ -1,3 +1,6 @@
+Install screen:
+$ sudo apt install screen
+
 $ sudo cat /dev/ttyACM0
 
 Use screen

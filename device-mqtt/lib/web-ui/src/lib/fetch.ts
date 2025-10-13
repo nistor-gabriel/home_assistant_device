@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { Stats, PATH_STATS } from './endpoints';
+
 /* ========================================================================== */
 
 export interface GetData<D = Record<string, string>> {
@@ -147,4 +149,18 @@ export async function doDelete(path: string): Promise<string | 'ok'> {
         console.error('failed to delete ' + path, e);
         return e + '';
     }
+}
+
+export function useDeltaTimeCompensation() {
+    const [deltaTime, setDeltaTime] = useState<number>(0);
+
+    useGetEffect<Stats>(PATH_STATS, (data) => {
+        if (data) {
+            setDeltaTime(Date.now() - new Date(data.time).getTime());
+        }
+    });
+
+    return (sdate: string | Date) => {
+        return deltaTime + new Date(sdate).getTime();
+    };
 }

@@ -1,0 +1,81 @@
+{
+  "homeassistant/switch/%(device_id)s/%(switch_id)s/config": {
+    "name": "%(switch_name)s",
+    "object_id": "%(device_id)s_%(switch_id)s",
+    "unique_id": "%(device_id)s_%(switch_id)s",
+    "state_topic": "device/%(device_id)s/switch/%(switch_id)s",
+    "command_topic": "device/%(device_id)s/switch/%(switch_id)s/set",
+    "availability": [
+      {
+        "topic": "device/%(device_id)s/switch/%(switch_id)s/status",
+        "payload_available": "online",
+        "payload_not_available": "offline"
+      },
+      {
+        "topic": "device/%(device_id)s/status",
+        "payload_available": "online",
+        "payload_not_available": "offline"
+      }
+    ],
+    "availability_mode": "all",
+    "payload_on": "ON",
+    "payload_off": "OFF",
+    "state_on": "ON",
+    "state_off": "OFF",
+    "optimistic": false,
+    "qos": 1,
+    "retain": false
+  },
+  "homeassistant/switch/%(device_id)s/%(switch_id)s_status/config": {
+    "name": "Disabled %(switch_name)s Switch",
+    "entity_category": "config",
+    "object_id": "%(device_id)s_%(switch_id)s_status",
+    "unique_id": "%(device_id)s_%(switch_id)s_status",
+    "state_topic": "device/%(device_id)s/switch/%(switch_id)s/status",
+    "command_topic": "device/%(device_id)s/switch/%(switch_id)s/status/set",
+    "availability_topic": "device/%(device_id)s/status",
+    "payload_available": "online",
+    "payload_not_available": "offline",
+    "payload_on": "offline",
+    "payload_off": "online",
+    "state_on": "offline",
+    "state_off": "online",
+    "optimistic": false,
+    "qos": 1,
+    "retain": false
+  },
+  "homeassistant/number/%(device_id)s/%(switch_id)s_stoptimeout/config": {
+      "name": "%(switch_name)s Auto-Off in",
+      "object_id": "%(device_id)s_%(switch_id)s_stoptimeout",
+      "unique_id": "%(device_id)s_%(switch_id)s_stoptimeout",
+      "state_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout",
+      "command_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout",
+      "availability_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout/enabled",
+      "payload_available": "ON",
+      "payload_not_available": "OFF",
+      "icon": "mdi:sleep",
+      "min": 0,
+      "max": 10080,
+      "step": 1,
+      "mode": "box",
+      "unit_of_measurement": "min",
+      "optimistic": false,
+      "qos": 1,
+      "retain": true
+  },
+  "homeassistant/switch/%(device_id)s/%(switch_id)s_stoptimeoutenabled/config": {
+    "name": "%(switch_name)s Auto-Off Enabled",
+    "object_id": "%(device_id)s_%(switch_id)s_stoptimeoutenabled",
+    "unique_id": "%(device_id)s_%(switch_id)s_stoptimeoutenabled",
+    "state_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout/enabled",
+    "command_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout/enabled",
+    "icon": "mdi:sleep-off",
+    "payload_on": "ON",
+    "payload_off": "OFF",
+    "state_on": "ON",
+    "state_off": "OFF",
+    "optimistic": false,
+    "qos": 1,
+    "retain": true
+  }
+}
