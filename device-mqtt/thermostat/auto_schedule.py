@@ -1,6 +1,6 @@
-import time
 import json
 import util_temp
+import util
 
 try:
     import typ
@@ -22,18 +22,14 @@ class AutoSchedule:
         self._temp = {str(week_day): {str(hour): temperature for hour in range(0, 24)} for week_day in range(0, 7)}
 
     def setup(self):
-        cnt = None
         try:
             f = open(self._filename, 'r')
             # noinspection PyTypeChecker
-            cnt = json.load(f)
+            self._temp = json.load(f)
             f.close()
         except OSError:
             print('no temperature file available')
 
-        if not cnt:
-            return
-        self._temp = cnt
         self._has_changed = False
         self._loop.create_task(self._run())
 
@@ -58,13 +54,13 @@ class AutoSchedule:
         return True
 
     def get_temp(self):
-        ctime = time.localtime()
+        ctime = util.local_time()
         return self._temp[str(ctime[6])][str(ctime[3])]
 
     async def _run(self):
         while True:
-            if self.has_changed:
-                self.has_changed = False
+            if self._has_changed:
+                self._has_changed = False
                 f = open(self._filename, 'w')
                 # noinspection PyTypeChecker
                 json.dump(self._temp, f)

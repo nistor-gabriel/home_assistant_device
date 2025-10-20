@@ -5,7 +5,6 @@ from auth import Auth
 import gc
 import os
 import util
-import time
 try:
     import asyncio
 except ImportError:
@@ -27,7 +26,8 @@ def install_stats(app: Microdot, auth: Auth, mqtt: MQTTRepo, device: Device,
             used = size - free
             # noinspection PyUnresolvedReferences
             data.update(
-                time=util.format_date(time.localtime()),
+                time=util.format_date(util.local_time()),
+                tzone=util.timezone['name'],
                 uptime=util.uptime(),
                 memoryFree=gc.mem_free(),
                 memoryUsed=gc.mem_alloc(),

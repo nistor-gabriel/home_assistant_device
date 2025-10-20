@@ -7,60 +7,29 @@ import { useGetData, cn, doModify, useTimelyRefresh, useDeltaTimeCompensation } 
 import * as ep from '@/lib/endpoints';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { SpinnerBars } from '@/components/ui/shadcn-io/spinner';
 import { toast } from 'sonner';
+import TimeoutSelect from '@/components/timeout';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { AlertUpdateFailed } from '@/components/common';
 
 /* ========================================================================== */
 
 const DashboardSwitch: React.FC = () => {
-    const [rsp, refreshSwitches] = useGetData<ep.Switch>(ep.PATH_SWITCH, 'refresh');
-    const refresh = useTimelyRefresh(5, refreshSwitches);
+    const [rsp, refresh] = useGetData<ep.Switch>(ep.PATH_SWITCH, 'refresh');
+    useTimelyRefresh(5, refresh);
 
     const isLoading = rsp.status === 'loading';
     const isError = rsp.status === 'failed';
     const isOk = rsp.status === 'ok';
     const [targetSwitch, setTargetSwitch] = useState<ep.SwitchItem | false>(false);
     const [isProcessing, setProcessing] = useState<boolean>(false);
-    const [selectTimeout, setSelectTimeout] = useState<string>('none');
-    const [hourTimeout, setHourTimeout] = useState<number | string>('');
-    const [minuteTimeout, setMinuteTimeout] = useState<number | string>('');
+    const [selectTimeout, setSelectTimeout] = useState<number>(0);
 
     const compensateDate = useDeltaTimeCompensation();
-
-    const isCustom = selectTimeout === 'custom';
-
-    const normalize = (value: string, limit: boolean) => {
-        if (value === '') {
-            return value;
-        }
-        const val = parseInt(value);
-        if (isNaN(val)) {
-            return '';
-        }
-        if (val < 0) {
-            return Math.abs(val);
-        }
-        if (!limit) {
-            return val;
-        }
-        if (val > 59) {
-            return 59;
-        }
-        return val;
-    };
 
     const handleSwitch = async (sw: ep.SwitchItem) => {
         if (!sw.on) {
@@ -87,11 +56,8 @@ const DashboardSwitch: React.FC = () => {
             return;
         }
         let on: boolean | number = true;
-        if (selectTimeout === 'custom') {
-            on = (typeof hourTimeout === 'number' ? hourTimeout : 0) * 60 +
-                (typeof minuteTimeout === 'number' ? minuteTimeout : 0)
-        } else if (selectTimeout !== 'none') {
-            on = parseInt(selectTimeout);
+        if (selectTimeout !== 0) {
+            on = selectTimeout;
         }
 
         const path = ep.pathSwitchItem(targetSwitch);
@@ -168,29 +134,19 @@ const DashboardSwitch: React.FC = () => {
                             Provide the automatic stop time for <b>{targetSwitch !== false ? targetSwitch.name : ''}</b> the switch if applicable.
                         </AlertDialogDescription>
                         <div className="space-y-4 mt-6">
-                            <Select value={selectTimeout} onValueChange={setSelectTimeout}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a switch timeout" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="custom">Custom</SelectItem>
-                                    <SelectItem value="none">Don't stop</SelectItem>
-                                    <SelectItem value="5">5 minutes</SelectItem>
-                                    <SelectItem value="10">10 minutes</SelectItem>
-                                    <SelectItem value="15">15 minutes</SelectItem>
-                                    <SelectItem value="20">20 minutes</SelectItem>
-                                    <SelectItem value="30">30 minutes</SelectItem>
-                                    <SelectItem value="40">40 minutes</SelectItem>
-                                    <SelectItem value="50">50 minutes</SelectItem>
-                                    <SelectItem value="60">1 hour</SelectItem>
-                                    <SelectItem value="90">1 hour and half</SelectItem>
-                                    <SelectItem value="120">2 hours</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <div className="flex space-x-4 mt-6">
-                                <Input type="number" value={hourTimeout} onChange={(e) => setHourTimeout(normalize(e.target.value, false))} placeholder="hours" min={0} step={1} disabled={!isCustom} />
-                                <Input type="number" value={minuteTimeout} onChange={(e) => setMinuteTimeout(normalize(e.target.value, true))} placeholder="minutes" min={0} max={59} step={1} disabled={!isCustom} />
-                            </div>
+                            <TimeoutSelect options={[
+                                {value: 0, label: 'Don\'t stop'},
+                                {value: 5, label: '5 minutes'},
+                                {value: 10, label: '10 minutes'},
+                                {value: 15, label: '15 minutes'},
+                                {value: 20, label: '20 minutes'},
+                                {value: 30, label: '30 minutes'},
+                                {value: 40, label: '40 minutes'},
+                                {value: 50, label: '50 minutes'},
+                                {value: 60, label: '1 hour'},
+                                {value: 90, label: '1 and half hours'},
+                                {value: 120, label: '2 hours'},
+                            ]} onChange={setSelectTimeout} value={selectTimeout} variant="minutes"/>
                         </div>
                     </AlertDialogHeader>
 

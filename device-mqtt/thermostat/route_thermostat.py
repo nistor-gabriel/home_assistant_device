@@ -104,12 +104,12 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
             if pump_period is util.INVALID or not heating.set_pump_period(pump_period):
                 return {'pumpPeriod': 'invalid'}, 400
 
-        delta_start = util.get_body_str(request.json, 'deltaStart')
+        delta_start = util.get_body_float(request.json, 'deltaStart')
         if delta_start is not None:
             if delta_start is util.INVALID or not controller.set_delta_start(delta_start):
                 return {'deltaStart': 'invalid'}, 400
 
-        delta_end = util.get_body_str(request.json, 'deltaEnd')
+        delta_end = util.get_body_float(request.json, 'deltaEnd')
         if delta_end is not None:
             if delta_end is util.INVALID or not controller.set_delta_end(delta_end):
                 return {'deltaEnd': 'invalid'}, 400

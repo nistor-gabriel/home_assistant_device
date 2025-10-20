@@ -49,6 +49,9 @@ class Controller:
         return self._listeners.add(listener)
 
     def get_mode(self):
+        mode = self._mode.get()
+        if mode == self.MODE_AUTO and not util.is_time_synchronized:
+            return self.MODE_MANUAL
         return self._mode.get()
 
     def get_delta_start(self):
@@ -105,15 +108,13 @@ class Controller:
         return self.get_target_temp() + self._delta_end.get()
 
     def get_target_temp(self):
-        mode = self._mode.get()
+        mode = self.get_mode()
         if mode == self.MODE_AWAY:
             return self._temp_away.get()
         if mode == self.MODE_MANUAL:
             return self._temp_manual.get()
         if mode == self.MODE_DISABLED:
             return None
-        if not util.is_time_synchronized:
-            return self._temp_manual.get()
         return self._auto_schedule.get_temp()
 
     def get_temp(self):
@@ -123,6 +124,7 @@ class Controller:
         return self._is_on
 
     async def _run(self):
+        await asyncio.sleep(25)  # wait 25 seconds so the time can be synchronized
         while True:
             temp = self._temp_sensor.read_temperature()
             has_changed = self._temp != temp

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Lightbulb, Wifi, Radio, Settings as SettingsIcon, FileSymlink } from 'lucide-react';
+import { Home, Wifi, Radio, Settings as SettingsIcon, FileSymlink, Flame } from 'lucide-react';
 import ReactDOM from 'react-dom/client'
 import Moment from 'react-moment';
 import { Toaster } from '@/components/ui/sonner';
@@ -27,7 +27,7 @@ const dashboardItems: DashboardItem[] = [
 
 const menuItems: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, node: <Dashboard key="dashboard" dashboardItems={dashboardItems} /> },
-  { id: 'switch', label: 'Switch Configuration', icon: Lightbulb, node: <Thermostat key="thermostat" /> },
+  { id: 'thermostat', label: 'Thermostat Configuration', icon: Flame, node: <Thermostat key="thermostat" /> },
   { id: 'wlan', label: 'WiFi Configuration', icon: Wifi, node: <Wlan key="wlan" /> },
   { id: 'mqtt', label: 'MQTT Connection', icon: Radio, node: <MQTT key="mqtt" /> },
   { id: 'settings', label: 'Settings', icon: SettingsIcon, node: <Settings key="settings" /> },

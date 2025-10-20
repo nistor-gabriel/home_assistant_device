@@ -108,7 +108,7 @@ class Switch:
                 self._blinker.on()
         if self._is_on:
             return
-        self._on_since = time.time()
+        self._on_since = util.time()
         self._is_on = True
         self._event.set()
         self._pin.low()

@@ -51,18 +51,20 @@
 - dst: auto_schedule.py
 - dst: setup.py
 
-#- dst: web-ui/index.html
-#  src: web-ui/dist/index.html
-#  type: gzip
-#- dst: web-ui/favicon.ico
-#  src: web-ui/dist/favicon.ico
-#  type: gzip
-#- dst: web-ui/index.js
-#  src: web-ui/dist/index.js
-#  type: gzip
-#- dst: web-ui/index.css
-#  src: web-ui/dist/index.css
-#  type: gzip
+- dst: web-ui/index.html
+  src: web-ui/dist/index.html
+  type: gzip
+- dst: web-ui/favicon.ico
+  src: web-ui/dist/favicon.ico
+  type: gzip
+- dst: web-ui/index.js
+  src: web-ui/dist/index.js
+  type: gzip
+- dst: web-ui/index.css
+  src: web-ui/dist/index.css
+  type: gzip
 
 - dst: config.json
+  ignore: true
+- dst: temperature.json
   ignore: true

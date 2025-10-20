@@ -66,11 +66,13 @@ export function useGetEffect<D = Record<string, string>>(path: string, cb: ((dat
     if (useRefresh) {
         [refCount, setRefCount] = useState<number>(1);
     }
+    const [fetching, setFetching] = useState<boolean>(true);
 
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
+                setFetching(true);
                 bcb && bcb();
                 const data = await doGet<D>(path, defaultData);
                 if (!mounted) {
@@ -80,6 +82,7 @@ export function useGetEffect<D = Record<string, string>>(path: string, cb: ((dat
             } catch (e) {
                 cb(defaultData);
             }
+            setFetching(false);
         })();
         return () => {
             mounted = false;
@@ -87,7 +90,7 @@ export function useGetEffect<D = Record<string, string>>(path: string, cb: ((dat
     }, [path, refCount]);
 
     if (useRefresh) {
-        return () => setRefCount(refCount + 1);
+        return () => !fetching &&  setRefCount(refCount + 1);
     }
 }
 

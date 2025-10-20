@@ -35,6 +35,7 @@ const DashboardSystem: React.FC = () => {
                         <Table className="ml-2 w-[10%] text-nowrap">
                             <TableBody>
                                 {[
+                                    { label: 'Time Zone', value: stats.data?.tzone },
                                     { label: 'Now is', value: (<Moment date={stats.data?.time} parse="YYYY-MM-DDTHH:mm:ss" format="YYYY-MM-DD HH:mm:ss" />) },
                                     { label: 'Uptime', value: (<Moment subtract={{ seconds: stats.data?.uptime || 0 }} fromNow />) },
                                     { label: 'Free RAM', value: <>{stats.data?.memoryFree ? (stats.data.memoryFree / 1024).toFixed(1) + ' Kb' : '-'}</> },

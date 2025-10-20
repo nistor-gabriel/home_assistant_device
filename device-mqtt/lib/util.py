@@ -1,4 +1,4 @@
-import time
+import time as mtime
 
 try:
     import typ
@@ -50,32 +50,101 @@ class Listeners:
 
 
 is_time_synchronized: bool = False
-start_time = time.time()
+hosts = ['pool.ntp.org', '89.36.93.8']
+start_time = mtime.time()
+timezone = {
+    'name': 'GMT',
+    'std_offset': 0,
+    'dst_offset': 0,
+    'dst_start': lambda y: (1, 0, 0),  # dummy, not used
+    'dst_end': lambda y: (1, 0, 0),    # dummy, not used
+}
+
+
+def set_timezone(name: str, std_offset: int, dst_offset: int, dst_start: typ.Callable, dst_end: typ.Callable):
+    timezone['name'] = name
+    timezone['std_offset'] = std_offset
+    timezone['dst_offset'] = dst_offset
+    timezone['dst_start'] = dst_start
+    timezone['dst_end'] = dst_end
+
+
+# noinspection PyTypeChecker
+def is_dst(year, month, day, hour):
+    start_day, start_hour, _ = timezone['dst_start'](year)
+    end_day, end_hour, _ = timezone['dst_end'](year)
+    start_ts = mtime.mktime((year, 3, start_day, start_hour, 0, 0, 0, 0))
+    end_ts = mtime.mktime((year, 10 if timezone['name'].startswith('Europe') else 11, end_day, end_hour, 0, 0, 0, 0, 0))
+    now_ts = mtime.mktime((year, month, day, hour, 0, 0, 0, 0))
+    return start_ts <= now_ts < end_ts
+
+
+# noinspection PyTypeChecker
+def last_sunday(year: int, month: int):
+    # Find the date of the last Sunday in a given month
+    for day in range(31, 24, -1):  # Always within last week
+        if mtime.localtime(mtime.mktime((year, month, day, 0, 0, 0, 0, 0)))[6] == 6:
+            return day
+    return 31
+
+
+# noinspection PyTypeChecker
+def first_sunday(year: int, month: int):
+    for day in range(1, 8):
+        if mtime.localtime(mtime.mktime((year, month, day, 0, 0, 0, 0, 0)))[6] == 6:
+            return day
+    return 1
+
+
+# noinspection PyTypeChecker
+def second_sunday(year: int, month: int):
+    found = 0
+    for day in range(1, 15):
+        if mtime.localtime(mtime.mktime((year, month, day, 0, 0, 0, 0, 0)))[6] == 6:
+            found += 1
+            if found == 2:
+                return day
+    return 8
+
+
+def time():
+    t = mtime.gmtime()
+    year, month, day, hour = t[0], t[1], t[2], t[3]
+    offset = timezone['dst_offset'] if is_dst(year, month, day, hour) else timezone['std_offset']
+    return mtime.mktime(t) + offset
+
+
+def local_time():
+    return mtime.localtime(time())
 
 
 def uptime():
-    return time.time() - start_time
+    return mtime.time() - start_time
 
 
 async def synchronize_time():
     # print('DEBUG: synchronize time')
     global is_time_synchronized, start_time
     while not is_time_synchronized:
-        try:
-            ntptime.host = '89.36.93.8'
-            ntptime.settime()
-            print('local time after synchronization：%s' % format_date(time.localtime()))
-            start_time = time.time()
-            is_time_synchronized = True
+        for host in hosts:
+            try:
+                ntptime.host = host
+                ntptime.settime()
+                is_time_synchronized = True
+                break
+            except OSError as e:
+                print('failed to synchronize time on host ', host, ':', e)
+        if is_time_synchronized:
+            start_time = mtime.mktime(local_time())
+            print('local time after synchronization：%s' % format_date(local_time()))
             break
-        except OSError as e:
-            print('failed to synchronize time:', e)
+
         await asyncio.sleep(10)
 
 
-def format_date(curt: time.struct_time):
+def format_date(curt: mtime.struct_time):
     tm_year, tm_mon, tm_day, tm_hour, tm_min, tm_sec, _wd, _yd = curt
-    return '{}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}.000Z'.format(tm_year, tm_mon, tm_day, tm_hour, tm_min, tm_sec)
+    return '{}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}'.format(tm_year, tm_mon, tm_day, tm_hour, tm_min, tm_sec)
 
 
 def as_float(msg: str, target: str = ''):

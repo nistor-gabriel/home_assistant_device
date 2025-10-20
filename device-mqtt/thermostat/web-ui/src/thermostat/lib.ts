@@ -23,7 +23,7 @@ export interface Thermostat {
 
 export interface ThermostatConfig {
     offsetPeriod: number;
-    stopPeriod: number;
+    pumpPeriod: number;
     deltaStart: number;
     deltaEnd: number;
     pumpCyclePeriod: number;

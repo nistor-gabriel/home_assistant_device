@@ -8,12 +8,12 @@ PYTHON=$ROOT/venv/bin/python3.9
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-#. ./env-node-js.sh
-#
-#cd "$ROOT_PROJ/web-ui" || exit 1
-##npm run build
-#cd dist || exit 1
-#chown -R gabriel:gabriel .
+. ./env-node-js.sh
+
+cd "$ROOT_PROJ/web-ui" || exit 1
+#npm run build
+cd dist || exit 1
+chown -R gabriel:gabriel .
 rm -R -f "$ROOT_DIST"
 mkdir -p "$ROOT_DIST"
 

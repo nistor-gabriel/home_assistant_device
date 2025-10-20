@@ -35,6 +35,14 @@ loop = asyncio.get_event_loop()
 app = Microdot()
 Response.default_content_type = 'application/json; charset=utf-8'
 
+util.set_timezone(
+    name='Europe/Bucharest',
+    std_offset=2 * 3600,  # UTC+2
+    dst_offset=3 * 3600,  # UTC+3
+    dst_start=lambda y: (util.last_sunday(y, 3), 3, 0),   # Last Sunday of March, 03:00
+    dst_end=lambda y: (util.last_sunday(y, 10), 4, 0),    # Last Sunday of October, 04:00
+)
+
 
 def on_connect(has_internet: bool):
     if has_internet:

@@ -1,6 +1,5 @@
 from config import Config
 import util
-import time
 
 try:
     from event import EventManager
@@ -135,7 +134,7 @@ class Heating:
             return
         self._is_pump_on = True
         self._pin_pump.low()
-        self._on_since = time.time()
+        self._on_since = util.time()
         self._listeners.notify('pumpOn')
         print('started pump')
 
@@ -148,7 +147,7 @@ class Heating:
             return
         self._is_pump_on = self._is_auto_stop = self._is_auto_stop_pump = False
         self._pin_pump.high()
-        self._off_since = time.time()
+        self._off_since = util.time()
         self._on_since = None
         self._stop_time = 0
         self._listeners.notify('pumpOff')
@@ -167,16 +166,16 @@ class Heating:
             return
         self._is_heat_on = False
         self._is_stop_offset = True
-        self._on_since = time.time()
+        self._on_since = util.time()
         self._pin_heat.high()
         self._listeners.notify('heatOff')
         print('stopped heat')
 
     async def _run(self):
-        await asyncio.sleep(10)  # wait 10 seconds so the time can be synchronized
+        await asyncio.sleep(20)  # wait 20 seconds so the time can be synchronized
         self._start_maintenance()
         while True:
-            ctime = time.time()
+            ctime = util.time()
             if self._is_start_offset or self._is_stop_offset:
                 if ctime - self._on_since >= self._offset_period.get():
                     if self._is_start_offset:

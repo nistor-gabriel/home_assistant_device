@@ -8,6 +8,7 @@ export interface Api {
 
 export interface Stats {
     time: string;
+    tzone: string;
     flashFree: number;
     flashUsed: number;
     memoryFree: number;

@@ -3,6 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useGetEffect, cn, useTimelyRefresh, doModify, useDeltaTimeCompensation } from '@/lib';
 import * as tep from '@/thermostat/lib';
 import { Card, CardContent } from '@/components/ui/card';
+import TimeoutSelect from '@/components/timeout';
 import Moment from 'react-moment';
 import { Button } from '@/components/ui/button';
 import { SpinnerBars } from '@/components/ui/shadcn-io/spinner';
@@ -35,12 +36,11 @@ const DashboardThermostat: React.FC = () => {
     });
     const [isDragging, setIsDragging] = useState(false);
     const [startHeating, setStartHeating] = useState<boolean>(false);
-    const [selectTimeout, setSelectTimeout] = useState<string>('60');
+    const [selectTimeout, setSelectTimeout] = useState<number>(60);
 
     const refreshThermostat = useGetEffect<tep.Thermostat>(tep.PATH_THERMOSTAT, (data) => {
         if (data) {
             setTemperature(data.temperatureTarget);
-            data.temperature = 14;
             setTherm(data);
             setProcessing(false);
             setStatus('ok');
@@ -49,7 +49,7 @@ const DashboardThermostat: React.FC = () => {
         }
     }, 'refresh');
 
-    useTimelyRefresh(10, refreshThermostat);
+    useTimelyRefresh(5, refreshThermostat);
 
     const publishTemp = async (temperatureManual: number) => {
         const timeout = setTimeout(() => setProcessing(true), 500);
@@ -92,7 +92,7 @@ const DashboardThermostat: React.FC = () => {
 
     const svgRef = React.useRef<SVGSVGElement>(null);
 
-    const handleDrag = (e: any) => {
+    const handleDrag = (e: MouseEvent | TouchEvent) => {
         if (therm.mode === 'disabled' || !isDragging) {
             return;
         }
@@ -106,8 +106,8 @@ const DashboardThermostat: React.FC = () => {
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
 
-        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        const clientX = e.type.includes('mouse') ? (e as MouseEvent).clientX : (e as TouchEvent).touches[0].clientX;
+        const clientY = e.type.includes('mouse') ? (e as MouseEvent).clientY : (e as TouchEvent).touches[0].clientY;
 
         const x = clientX - centerX;
         const y = clientY - centerY;
@@ -141,7 +141,7 @@ const DashboardThermostat: React.FC = () => {
     const handleStartHeating = async () => {
         setStartHeating(false);
         const timeout = setTimeout(() => setProcessing(true), 300);
-        const result = await doModify('PUT', tep.PATH_THERMOSTAT, { heatOn: parseInt(selectTimeout) });
+        const result = await doModify('PUT', tep.PATH_THERMOSTAT, { heatOn: selectTimeout });
         clearTimeout(timeout);
         setProcessing(false);
         if (result === 'ok') {
@@ -189,8 +189,7 @@ const DashboardThermostat: React.FC = () => {
                 color: 'text-blue-500',
                 bg: 'bg-blue-50',
                 border: 'border-blue-200',
-                gradient: ['#3b82f6', '#2563eb'],
-                ring: 'focus:ring-blue-500'
+                gradient: ['#54b315ff', '#f97316'],
             };
             case 'manual': return {
                 color: 'text-orange-500',
@@ -204,14 +203,12 @@ const DashboardThermostat: React.FC = () => {
                 bg: 'bg-cyan-50',
                 border: 'border-cyan-200',
                 gradient: ['#06b6d4', '#0891b2'],
-                ring: 'focus:ring-cyan-500'
             };
             case 'disabled': return {
                 color: 'text-gray-400',
                 bg: 'bg-gray-50',
                 border: 'border-gray-200',
                 gradient: ['#9ca3af', '#6b7280'],
-                ring: 'focus:ring-gray-400'
             };
             default: return {
                 color: 'text-blue-500',
@@ -274,6 +271,7 @@ const DashboardThermostat: React.FC = () => {
                                     ? 'bg-red-500 text-white hover:bg-red-600 border-red-600 shadow-lg shadow-red-200'
                                     : 'text-orange-500 hover:bg-orange-50 border-orange-300'
                             )}
+                            disabled={!isOk}
                             onClick={toggleHeating}
                         >
                             <Flame className={cn(therm.pumpOn && 'animate-pulse')} />
@@ -355,10 +353,10 @@ const DashboardThermostat: React.FC = () => {
                                 {therm.mode !== 'disabled' ? `${temperature.toFixed(1)}°C` : 'Off'}
                             </div>
                             <div className="flex items-center font-semibold text-slate-600 text-lg min-h-[28px]">
-                                {therm.temperature ? (
+                                {typeof therm.temperature === 'number' ? (
                                     <>
                                         <Thermometer className="w-5 h-5" />
-                                        <span className="ml-1">{therm.temperature}°C</span>
+                                        <span className="ml-1">{therm.temperature.toFixed(1)}°C</span>
                                     </>
                                 ) : therm.mode !== 'disabled' && isLoading ? (
                                     <Skeleton className="h-6 w-20 rounded" />
@@ -428,7 +426,7 @@ const DashboardThermostat: React.FC = () => {
                                     startTempPublish(newTemp);
                                 }
                             }}
-                            disabled={temperature <= MIN_TEMP}
+                            disabled={temperature <= MIN_TEMP || !isOk}
                         >
                             <Minus className="w-6 h-6 stroke-[3]" />
                         </Button>
@@ -443,7 +441,7 @@ const DashboardThermostat: React.FC = () => {
                                     startTempPublish(newTemp);
                                 }
                             }}
-                            disabled={temperature >= MAX_TEMP}
+                            disabled={temperature >= MAX_TEMP || !isOk}
                         >
                             <Plus className="w-6 h-6 stroke-[3]" />
                         </Button>
@@ -463,18 +461,13 @@ const DashboardThermostat: React.FC = () => {
                             Please specify how long should the heat be running.
                         </AlertDialogDescription>
                         <div className="space-y-4 mt-6">
-                            <Select value={selectTimeout} onValueChange={setSelectTimeout}>
-                                <SelectTrigger className="border-2">
-                                    <SelectValue placeholder="Select a heat timeout" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="15">15 minutes</SelectItem>
-                                    <SelectItem value="30">30 minutes</SelectItem>
-                                    <SelectItem value="60">1 hour</SelectItem>
-                                    <SelectItem value="90">1 hour and half</SelectItem>
-                                    <SelectItem value="120">2 hours</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <TimeoutSelect minValue={10} options={[
+                                {value: 15, label: '15 minutes'},
+                                {value: 30, label: '30 minutes'},
+                                {value: 60, label: '1 hour'},
+                                {value: 90, label: '1 and half hours'},
+                                {value: 120, label: '2 hours'},
+                            ]} onChange={setSelectTimeout} value={selectTimeout} variant="minutes-minutes" />
                         </div>
                     </AlertDialogHeader>
 
