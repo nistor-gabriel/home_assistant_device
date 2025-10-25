@@ -45,7 +45,7 @@ class Heating:
         self._is_auto_stop = False
         self._is_auto_stop_pump = False
         self._on_since = None
-        self._off_since = None
+        self._off_since = util.time()
 
     def setup(self):
         self._loop.create_task(self._run())
@@ -97,24 +97,14 @@ class Heating:
 
     # The default heating stop period will be 1 hour, the time is in seconds.
     def on(self, timeout: float):
-        if self.on_continuously():
-            self._stop_time = timeout
-            self._is_auto_stop = True
+        if self._start(timeout, True):
             return True
         return False
 
     def on_continuously(self):
         self._is_auto_stop = False
-        if self._is_pump_on and self._is_heat_on:
-            return False
-        if self._is_start_offset:
-            return False
-        print('starting heating')
-
-        self._start_pump()
-        self._is_stop_offset = self._is_auto_stop_pump = False
-        self._is_start_offset = True
-        return True
+        self._stop_time = 0
+        return self._start(0, False)
 
     def off(self):
         if not self._is_pump_on:
@@ -127,6 +117,21 @@ class Heating:
         else:
             self._is_start_offset = False
             self._stop_pump()
+        return True
+
+    def _start(self, timeout, is_auto_stop):
+        if self._is_pump_on and self._is_heat_on:
+            return False
+        if self._is_start_offset:
+            return False
+        print('starting heating')
+
+        self._stop_time = timeout
+        self._is_auto_stop = is_auto_stop
+
+        self._start_pump()
+        self._is_stop_offset = self._is_auto_stop_pump = False
+        self._is_start_offset = True
         return True
 
     def _start_pump(self):

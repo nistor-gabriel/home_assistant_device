@@ -1,81 +1,81 @@
 {
-  "homeassistant/switch/%(device_id)s/%(switch_id)s/config": {
-    "name": "%(switch_name)s",
-    "object_id": "%(device_id)s_%(switch_id)s",
-    "unique_id": "%(device_id)s_%(switch_id)s",
-    "state_topic": "device/%(device_id)s/switch/%(switch_id)s",
-    "command_topic": "device/%(device_id)s/switch/%(switch_id)s/set",
-    "availability": [
-      {
-        "topic": "device/%(device_id)s/switch/%(switch_id)s/status",
-        "payload_available": "online",
-        "payload_not_available": "offline"
-      },
-      {
-        "topic": "device/%(device_id)s/status",
-        "payload_available": "online",
-        "payload_not_available": "offline"
-      }
-    ],
-    "availability_mode": "all",
-    "payload_on": "ON",
-    "payload_off": "OFF",
-    "state_on": "ON",
-    "state_off": "OFF",
-    "optimistic": false,
-    "qos": 1,
-    "retain": false
-  },
-  "homeassistant/switch/%(device_id)s/%(switch_id)s_status/config": {
-    "name": "Disabled %(switch_name)s Switch",
-    "entity_category": "config",
-    "object_id": "%(device_id)s_%(switch_id)s_status",
-    "unique_id": "%(device_id)s_%(switch_id)s_status",
-    "state_topic": "device/%(device_id)s/switch/%(switch_id)s/status",
-    "command_topic": "device/%(device_id)s/switch/%(switch_id)s/status/set",
+  "@template": {
     "availability_topic": "device/%(device_id)s/status",
     "payload_available": "online",
-    "payload_not_available": "offline",
-    "payload_on": "offline",
-    "payload_off": "online",
-    "state_on": "offline",
-    "state_off": "online",
-    "optimistic": false,
-    "qos": 1,
-    "retain": false
+    "payload_not_available": "offline"
   },
-  "homeassistant/number/%(device_id)s/%(switch_id)s_stoptimeout/config": {
-      "name": "%(switch_name)s Auto-Off in",
-      "object_id": "%(device_id)s_%(switch_id)s_stoptimeout",
-      "unique_id": "%(device_id)s_%(switch_id)s_stoptimeout",
-      "state_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout",
-      "command_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout",
-      "availability_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout/enabled",
-      "payload_available": "ON",
-      "payload_not_available": "OFF",
-      "icon": "mdi:sleep",
-      "min": 0,
-      "max": 10080,
-      "step": 1,
-      "mode": "box",
-      "unit_of_measurement": "min",
-      "optimistic": false,
-      "qos": 1,
-      "retain": true
+  "homeassistant/select/%(device_id)s/config": {
+    "name": "Mode",
+    "object_id": "%(device_id)s_mode",
+    "unique_id": "%(device_id)s_mode",
+    "state_topic": "device/%(device_id)s/mode",
+    "command_topic": "device/%(device_id)s/mode/set",
+    "icon": "mdi:thermometer-lines",
+    "options": ["auto", "manual", "away", "disabled"]
   },
-  "homeassistant/switch/%(device_id)s/%(switch_id)s_stoptimeoutenabled/config": {
-    "name": "%(switch_name)s Auto-Off Enabled",
-    "object_id": "%(device_id)s_%(switch_id)s_stoptimeoutenabled",
-    "unique_id": "%(device_id)s_%(switch_id)s_stoptimeoutenabled",
-    "state_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout/enabled",
-    "command_topic": "device/%(device_id)s/switch/%(switch_id)s/stoptimeout/enabled",
-    "icon": "mdi:sleep-off",
-    "payload_on": "ON",
-    "payload_off": "OFF",
-    "state_on": "ON",
-    "state_off": "OFF",
-    "optimistic": false,
+  "homeassistant/number/%(device_id)s/heatingtimeout/config": {
+    "name": "Heating Timeout",
+    "state_topic": "device/%(device_id)s/heatingtimeout",
+    "command_topic": "device/%(device_id)s/heatingtimeout/set",
+    "unique_id": "%(device_id)s_heatingtimeout",
+    "object_id": "%(device_id)s_heatingtimeout",
+    "icon": "mdi:sleep",
+    "min": 30,
+    "max": 10080,
+    "step": 1,
+    "mode": "box",
     "qos": 1,
     "retain": true
+  },
+  "homeassistant/sensor/%(device_id)s/temperature/config": {
+    "name": "Temperature",
+    "state_topic": "device/%(device_id)s/temperature",
+    "device_class": "temperature",
+    "unique_id": "%(device_id)s_temperature",
+    "object_id": "%(device_id)s_temperature",
+    "icon": "mdi:thermometer-low",
+    "unit_of_measurement": "°C"
+  },
+  "homeassistant/sensor/%(device_id)s/temperaturetarget/config": {
+    "name": "Target Temperature",
+    "state_topic": "device/%(device_id)s/temperaturetarget",
+    "device_class": "temperature",
+    "unique_id": "%(device_id)s_temperaturetarget",
+    "object_id": "%(device_id)s_temperaturetarget",
+    "icon": "mdi:thermometer-high",
+    "unit_of_measurement": "°C"
+  },
+  "homeassistant/sensor/%(device_id)s/pump/config": {
+    "name": "Pump",
+    "state_topic": "device/%(device_id)s/pump",
+    "unique_id": "%(device_id)s_pump",
+    "object_id": "%(device_id)s_pump",
+    "icon": "mdi:heat-pump"
+  },
+  "homeassistant/sensor/%(device_id)s/heat/config": {
+    "name": "Heat",
+    "state_topic": "device/%(device_id)s/heat",
+    "unique_id": "%(device_id)s_heat",
+    "object_id": "%(device_id)s_heat",
+    "icon": "mdi:heat-wave"
+  },
+  "homeassistant/sensor/%(device_id)s/thermostat/config": {
+    "name": "Thermostat",
+    "state_topic": "device/%(device_id)s/thermostat",
+    "unique_id": "%(device_id)s_thermostat",
+    "object_id": "%(device_id)s_thermostat",
+    "icon": "mdi:thermostat"
+  },
+  "homeassistant/switch/%(device_id)s/heating/config": {
+    "name": "Heating",
+    "object_id": "%(device_id)s_heating",
+    "unique_id": "%(device_id)s_heating",
+    "state_topic": "device/%(device_id)s/heating",
+    "command_topic": "device/%(device_id)s/heating/set",
+    "payload_on": "on",
+    "payload_off": "off",
+    "state_on": "on",
+    "state_off": "off",
+    "optimistic": true
   }
 }

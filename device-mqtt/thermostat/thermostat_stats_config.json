@@ -1,0 +1,32 @@
+{
+  "@template": {
+    "availability_topic": "device/%(device_id)s/status",
+    "payload_available": "online",
+    "payload_not_available": "offline",
+    "state_topic": "device/%(device_id)s/heatingstats"
+  },
+  "homeassistant/sensor/%(device_id)s/heatingonsince/config": {
+    "name": "Heating On Since",
+    "device_class": "timestamp",
+    "value_template": "{%%- if value_json.onSince == 'off' %%}{%% else %%}{{as_local(as_datetime(value_json.onSince))}}{%% endif -%%}",
+    "unique_id": "%(device_id)s_heating_onsince",
+    "object_id": "%(device_id)s_heating_onsince",
+    "icon": "mdi:clock-outline"
+  },
+  "homeassistant/sensor/%(device_id)s/heatingoffsince/config": {
+    "name": "Heating Off Since",
+    "device_class": "timestamp",
+    "value_template": "{%%- if value_json.offSince == 'off' %%}{%% else %%}{{as_local(as_datetime(value_json.offSince))}}{%% endif -%%}",
+    "unique_id": "%(device_id)s_heating_offsince",
+    "object_id": "%(device_id)s_heating_offsince",
+    "icon": "mdi:clock-minus-outline"
+  },
+  "homeassistant/sensor/%(device_id)s/heatingstoptimeout/config": {
+    "name": "Heating Auto-Stop",
+    "device_class": "timestamp",
+    "value_template": "{%%- if value_json.stopTimeout == 'off' %%}{%% else %%}{{as_local(as_datetime(value_json.onSince)) + timedelta(seconds=value_json.stopTimeout|int(0))}}{%% endif -%%}",
+    "unique_id": "%(device_id)s_heating_stoptimeout",
+    "object_id": "%(device_id)s_heating_stoptimeout",
+    "icon": "mdi:alarm"
+  }
+}

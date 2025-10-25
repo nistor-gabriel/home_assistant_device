@@ -3,6 +3,7 @@ from mqtt_repo import MQTTRepo
 from wlan import Wlan
 import json
 import util
+import gc
 
 try:
     import typ
@@ -81,6 +82,7 @@ class Device:
         template = self._read_template()
 
         for file in self._configs:
+            gc.collect()
             self._publish_config(file, var_s=var_s, template=template)
 
     def _build_vars(self):
@@ -128,8 +130,11 @@ class Device:
                 continue
             msg = dict(tpl)
             msg.update(data[topic])
-            msg_str = json.dumps(msg)
+            msg_str = json.dumps(msg, separators=(',', ':'))
             topic = topic % var_s
             msg_str = msg_str % var_s
+            msg_str = msg_str + ' '
+            # we need a whitespace at the end because somme times the last character  is lost in communication.
+            # print('DEBUG: publishing message "%s": %s' % (topic, msg_str))
             self._mqtt.put(topic, '', lazy=False)
             self._mqtt.put(topic, msg_str, lazy=False)

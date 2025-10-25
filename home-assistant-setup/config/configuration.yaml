@@ -106,6 +106,44 @@ lock:
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 
+# mqtt:
+#   - climate:
+#       name: Study
+#       modes:
+#        - heat
+#       object_id: device/thermostat1/temperature
+#       unique_id: device/thermostat1/temperature
+#       temperature_state_topic: device/thermostat1/temperaturetarget
+#       temperature_command_topic: device/thermostat1/temperaturetarget/set
+#       current_temperature_topic: device/thermostat1/temperature
+#       mode_state_topic: device/thermostat1/mode
+#       mode_state_template: heat
+#       precision: 0.1
+#       temperature_unit: C
+#       availability:
+#         topic: device/thermostat1/mode
+#         value_template: "{%- if value == 'manual' %} online {% else %} offline {% endif -%}"
+#   - select:
+#       name: Mode
+#       object_id: device/thermostat1/mode
+#       unique_id: device/thermostat1/mode
+#       state_topic: device/thermostat1/mode
+#       command_topic: device/thermostat1/mode/set
+#       icon: mdi:home-thermometer
+#       options:
+#         - auto
+#         - manual
+#         - away
+#         - disabled
+#   - switch:
+#       name: Heat
+#       object_id: device/thermostat1/heat
+#       unique_id: device/thermostat1/heat
+#       state_topic: device/thermostat1/heat
+#       command_topic: "device/thermostat1/heat/set
+
+
+
 # logger:
 #        default: info
 #        logs:

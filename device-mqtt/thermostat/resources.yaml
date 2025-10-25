@@ -50,6 +50,9 @@
 - dst: route_thermostat.py
 - dst: auto_schedule.py
 - dst: setup.py
+- dst: thermostat_config.json
+- dst: thermostat_climate_config.json
+- dst: thermostat_stats_config.json
 
 - dst: web-ui/index.html
   src: web-ui/dist/index.html

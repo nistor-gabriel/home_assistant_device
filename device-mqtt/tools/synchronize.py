@@ -145,7 +145,10 @@ def collect_serial_resources():
         try:
             if cache:
                 cached_file = cache.joinpath(name)
-                file_hash = hash_file(cached_file)
+                try:
+                    file_hash = hash_file(cached_file)
+                except IsADirectoryError:
+                    continue
                 if not file_hash:
                     cached_file.parent.mkdir(parents=True, exist_ok=True)
                     contents = ctx['board_files'].get(f)

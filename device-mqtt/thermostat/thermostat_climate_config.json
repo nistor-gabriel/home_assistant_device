@@ -1,0 +1,29 @@
+{
+  "homeassistant/climate/%(device_id)s/config": {
+    "name": "Thermostat",
+    "object_id": "%(device_id)s_thermostat_climate",
+    "unique_id": "%(device_id)s_thermostat_climate",
+    "modes": ["heat"],
+    "temperature_state_topic": "device/%(device_id)s/temperaturemanual",
+    "temperature_command_topic": "device/%(device_id)s/temperaturemanual/set",
+    "current_temperature_topic": "device/%(device_id)s/temperature",
+    "mode_state_topic": "device/%(device_id)s/mode",
+    "mode_state_template": "heat",
+    "availability": [
+      {
+        "topic": "device/%(device_id)s/mode",
+        "value_template": "{%%- if value == 'manual' %%} online {%% else %%} offline {%% endif -%%}"
+      },
+      {
+        "topic": "device/%(device_id)s/status",
+        "payload_available": "online",
+        "payload_not_available": "offline"
+      }
+    ],
+    "availability_mode": "all",
+    "min_temp": 5,
+    "max_temp": 30,
+    "temperature_unit": "C",
+    "precision": 0.1
+  }
+}

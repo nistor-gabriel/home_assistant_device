@@ -1,4 +1,5 @@
 import time as mtime
+import sys
 
 try:
     import typ
@@ -46,7 +47,9 @@ class Listeners:
             try:
                 listener(*args, **kwargs)
             except Exception as e:
-                print('ERROR: failed to run listener', listener, e)
+                print('ERROR: failed to run listener %s' % (listener,))
+                # noinspection PyUnresolvedReferences
+                sys.print_exception(e)
 
 
 is_time_synchronized: bool = False
@@ -133,7 +136,9 @@ async def synchronize_time():
                 is_time_synchronized = True
                 break
             except OSError as e:
-                print('failed to synchronize time on host ', host, ':', e)
+                print('failed to synchronize time on host "%s"' % (host,))
+                # noinspection PyUnresolvedReferences
+                sys.print_exception(e)
         if is_time_synchronized:
             start_time = mtime.mktime(local_time())
             print('local time after synchronization：%s' % format_date(local_time()))
@@ -151,14 +156,18 @@ def as_float(msg: str, target: str = ''):
     try:
         return float(msg)
     except ValueError as e:
-        print('ERROR: invalid', target, 'number received', msg, e)
+        print('ERROR: invalid %s number received: %s' % (target, msg))
+        # noinspection PyUnresolvedReferences
+        sys.print_exception(e)
 
 
 def as_int(msg: str, target: str = ''):
     try:
         return int(msg)
     except ValueError as e:
-        print('ERROR: invalid int', target, 'number received', msg, e)
+        print('ERROR: invalid int %s number received: %s' % (target, msg))
+        # noinspection PyUnresolvedReferences
+        sys.print_exception(e)
 
 
 def is_str(value, min_len: int | None = None, max_len: int | None = None):

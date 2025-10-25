@@ -23,6 +23,8 @@ class Controller:
     MODE_AUTO = 'auto'
     MODE_DISABLED = 'disabled'
 
+    MODES = [MODE_AUTO, MODE_MANUAL, MODE_AWAY, MODE_DISABLED]
+
     def __init__(self, config: Config, heating: Heating, loop: asyncio.AbstractEventLoop,
                  temp_sensor: TemperatureSensor, auto_schedule: AutoSchedule, temp_away: float, temp_manual: float,
                  delta_start: float, delta_end: float):
@@ -41,6 +43,7 @@ class Controller:
         self._devices: list | None = None
         self._temp: float | None = None
         self._is_on = False
+        self._temp_target: float = self.get_target_temp()
 
     def setup(self):
         self._loop.create_task(self._run())
@@ -73,14 +76,12 @@ class Controller:
         return True
 
     def set_mode(self, mode: str):
-        if mode != self.MODE_DISABLED and mode != self.MODE_MANUAL \
-                and mode != self.MODE_AWAY and mode != self.MODE_AUTO:
+        if mode not in self.MODES:
             return False
         if mode == self.MODE_DISABLED:
             self._is_on = False
             self._heating.off()
         self._mode.set(mode)
-        self._listeners.notify(mode)
         return True
 
     def get_temp_away(self):
@@ -100,12 +101,6 @@ class Controller:
             return False
         self._temp_manual.set(temp)
         return True
-
-    def get_min_target_temp(self):
-        return self.get_target_temp() - self._delta_start.get()
-
-    def get_max_target_temp(self):
-        return self.get_target_temp() + self._delta_end.get()
 
     def get_target_temp(self):
         mode = self.get_mode()
@@ -140,14 +135,18 @@ class Controller:
                 await asyncio.sleep(5)
                 continue
 
+            temp_target = self.get_target_temp()
+            if self._temp_target != temp_target:
+                self._listeners.notify('temperatureTarget')
+                self._temp_target = temp_target
             if self._mode.get() != self.MODE_DISABLED:
                 if self._is_on:
-                    if self._temp > self.get_max_target_temp():
+                    if self._temp > self._temp_target + self._delta_end.get():
                         self._is_on = False
                         self._heating.off()
                         self._listeners.notify('thermostatOff')
                         print('thermostat off')
-                elif self._temp < self.get_min_target_temp():
+                elif self._temp < self._temp_target - self._delta_start.get():
                     self._is_on = True
                     self._heating.on_continuously()
                     self._listeners.notify('thermostatOn')

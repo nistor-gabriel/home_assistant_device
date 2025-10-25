@@ -11,31 +11,104 @@ import util
 
 def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: Controller,
                        auto_schedule: AutoSchedule, mqtt: MQTTRepo, device: Device):
-    # path = 'device/%(id)s'
-    # path_disabled = path + '/disabled'
-    # path_offset_period = path + '/offsetperiod'
-    # path_stop_period = path + '/stopperiod'
-    # path_pump_cycle_period = path + '/pumpcycleperiod'
-    # path_pump_period = path + '/pumpperiod'
-    # path_heat = path + '/heat'
-    # path_mode = path + '/mode'
-    # path_delta_start = path + '/deltastart'
-    # path_delta_end = path + '/deltaend'
-    #
-    # def listener(event: str):
-    #     print(event)
-    #
-    # def cb_disabled(_topic: str, msg: str):
-    #     if msg == 'ON':
-    #         controller.set_disabled_low_watchdog(True)
-    #     else:
-    #         controller.set_disabled_low_watchdog(False)
-    #     mqtt.put(path_disabled_low_watchdog, 'ON' if controller.get_disabled_low_watchdog() else 'OFF')
-    #
-    # heating.add_listener(listener)
-    # controller.add_listener(listener)
-    #
-    # device.add_config('thermostat_config.json')
+    path = 'device/%(id)s'
+    path_temperature = path + '/temperature'
+    path_temperature_manual = path + '/temperaturemanual'
+    path_temperature_target = path + '/temperaturetarget'
+    path_mode = path + '/mode'
+    path_pump = path + '/pump'
+    path_heat = path + '/heat'
+    path_heating = path + '/heating'
+    path_heating_timeout = path + '/heatingtimeout'
+    path_thermostat = path + '/thermostat'
+
+    ctx = {
+        'timeout': 60
+    }
+
+    def publish_stats():
+        mqtt.put_obj(path + '/heatingstats', {
+            'onSince': util.format_date(time.localtime(heating.get_on_since())),
+            'stopTimeout': 'off' if heating.get_stop_time() == 0 else heating.get_stop_time(),
+            'offSince': 'off',
+        } if heating.get_on_since() else {
+            'onSince': 'off',
+            'offSince': util.format_date(time.localtime(heating.get_off_since())),
+            'stopTimeout': 'off',
+        })
+
+    def heating_listener(event: str):
+        if event == 'heatOn':
+            mqtt.put(path_heat, 'on')
+        elif event == 'heatOff':
+            mqtt.put(path_heat, 'off')
+            mqtt.put(path_heating, 'off')
+        elif event == 'pumpOn':
+            mqtt.put(path_pump, 'on')
+            mqtt.put(path_heating, 'on')
+            publish_stats()
+        elif event == 'pumpOff':
+            mqtt.put(path_pump, 'off')
+            publish_stats()
+
+    def controller_listener(event: str):
+        if event == 'temperature':
+            mqtt.put(path_temperature, str(controller.get_temp()))
+        elif event == 'thermostatOn':
+            mqtt.put(path_thermostat, 'on')
+            publish_stats()
+        elif event == 'thermostatOff':
+            mqtt.put(path_thermostat, 'off')
+            publish_stats()
+        elif event == 'temperatureTarget':
+            mqtt.put(path_temperature_target, str(controller.get_target_temp()))
+
+    def cb_mode(_topic: str, msg: str):
+        controller.set_mode(msg)
+        mqtt.put(path_mode, controller.get_mode())
+
+    def cb_temperature_manual(_topic: str, msg: str):
+        try:
+            controller.set_temp_manual(float(msg))
+        except ValueError:
+            return
+        mqtt.put(path_temperature_manual, str(controller.get_temp_manual()))
+
+    def cb_timeout(_topic: str, msg: str):
+        try:
+            ctx['timeout'] = int(msg)
+        except ValueError:
+            print('ERROR: invalid stop timeout number received: %s' % (msg,))
+            return
+        mqtt.put(path_heating_timeout, str(ctx['timeout']))
+
+    def cb_heating(_topic: str, msg: str):
+        if msg == 'on':
+            heating.on(timeout=ctx['timeout'] * 60)
+        elif msg == 'off':
+            heating.off()
+
+    heating.add_listener(heating_listener)
+    controller.add_listener(controller_listener)
+
+    mqtt.put(path_temperature_manual, str(controller.get_temp_manual()))
+    mqtt.put(path_thermostat, 'off')
+    mqtt.put(path_mode, controller.get_mode())
+    mqtt.put(path_heat, 'off')
+    mqtt.put(path_pump, 'off')
+    mqtt.put(path_heating, 'off')
+    mqtt.put(path_heating_timeout, str(ctx['timeout']))
+    mqtt.put(path_temperature_target, str(controller.get_target_temp()))
+    publish_stats()
+
+    mqtt.subscribe(path_heating_timeout + '/set', cb_timeout)
+    mqtt.subscribe(path_heating + '/set', cb_heating)
+    mqtt.subscribe(path_mode + '/set', cb_mode)
+    mqtt.subscribe(path_temperature_manual + '/set', cb_temperature_manual)
+
+    device.add_config('thermostat_config.json')
+    device.add_config('thermostat_climate_config.json')
+    device.add_config('thermostat_stats_config.json')
 
     @app.get('/thermostat')
     @auth.with_auth
@@ -85,6 +158,8 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
         if mode is not None:
             if mode is util.INVALID or not controller.set_mode(mode):
                 return {'mode': 'invalid'}, 400
+            else:
+                mqtt.put(path_mode, mode)
 
     @app.put('/thermostat/config')
     @auth.with_auth
@@ -123,6 +198,8 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
         if temp_manual is not None:
             if temp_manual is util.INVALID or not controller.set_temp_manual(temp_manual):
                 return {'temperatureManual': 'invalid'}, 400
+            else:
+                mqtt.put(path_temperature_manual, str(temp_manual))
 
         temperatures = util.get_body_obj(request.json, 'temperatures')
         if temperatures is not None:
