@@ -21,7 +21,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '^/(api|stats|mqtt|wlan|thermostat.*|fs.*)$': { target: 'http://192.168.100.76' }, // ^/(api|stats|mqtt|wlan|fs)$ // http://192.168.100.76 http://192.168.4.1
+      '^/(api|stats|mqtt|wlan|thermostat.*|fs.*)$': { target: 'http://192.168.100.74' }, // ^/(api|stats|mqtt|wlan|fs)$ // http://192.168.100.76 http://192.168.4.1
     },
   },
   build: {

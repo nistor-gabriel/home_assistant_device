@@ -53,6 +53,7 @@ class Listeners:
 
 
 is_time_synchronized: bool = False
+__synchronizing: bool = False
 hosts = ['pool.ntp.org', '89.36.93.8']
 start_time = mtime.time()
 timezone = {
@@ -127,7 +128,10 @@ def uptime():
 
 async def synchronize_time():
     # print('DEBUG: synchronize time')
-    global is_time_synchronized, start_time
+    global is_time_synchronized, start_time, __synchronizing
+    if __synchronizing:
+        return
+    __synchronizing = True
     while not is_time_synchronized:
         for host in hosts:
             try:
@@ -145,6 +149,8 @@ async def synchronize_time():
             break
 
         await asyncio.sleep(10)
+
+    __synchronizing = False
 
 
 def format_date(curt: mtime.struct_time):

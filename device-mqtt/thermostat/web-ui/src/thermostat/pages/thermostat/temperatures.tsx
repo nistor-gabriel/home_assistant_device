@@ -252,12 +252,24 @@ const Temperatures: React.FC<{
             reader.onload = (e) => {
                 try {
                     const imported = JSON.parse(e.target?.result as string);
-                    form.setValue('temperatures', Object.keys(imported).reduce((sch: typeof imported, key) => {
-                        if(!isNaN(parseInt(key))) {
-                            sch[key] = imported[key];
+                    const temperatures = imported?.temperatures || {};
+                    const temperaturesNormalized = DAYS.reduce((sch: typeof imported, day) => {
+                        let hourly: Record<string, number> = temperatures[day.id];
+                        const chourly: Record<string, number> = (get.data?.temperatures as any)[day.id];
+                        if(!hourly) {
+                            sch[day.id] = chourly;
+                        } else {
+                            for(let h = 0; h < 24; h++) {
+                                const hour = h.toString();
+                                if(typeof hourly[hour] !== 'number') {
+                                    hourly[hour] = chourly[hour];
+                                }
+                            }
+                            sch[day.id] = hourly;
                         }
                         return sch;
-                    }, {}), { shouldDirty: true });
+                    }, {});
+                    form.setValue('temperatures', temperaturesNormalized, { shouldDirty: true });
                     if (imported.temperatureAway !== undefined) {
                         form.setValue('temperatureAway', imported.temperatureAway, { shouldDirty: true });
                     }

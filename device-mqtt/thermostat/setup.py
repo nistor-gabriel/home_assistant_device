@@ -43,15 +43,32 @@ util.set_timezone(
     dst_end=lambda y: (util.last_sunday(y, 10), 4, 0),    # Last Sunday of October, 04:00
 )
 
+__starting: bool = False
+
+
+async def start_server():
+    global __starting
+    if __starting:
+        return
+    __starting = True
+    while __starting:
+        try:
+            await app.start_server(port=80, debug=False)
+            __starting = False
+        except OSError as e:
+            print('ERROR: start server: ', e)
+
 
 def on_connect(has_internet: bool):
     if has_internet:
         loop.create_task(util.synchronize_time())
-    loop.create_task(app.start_server(port=80, debug=False))
+    loop.create_task(start_server())
     print('server started')
 
 
 def on_disconnect():
+    global __starting
+    __starting = False
     app.shutdown()
     print('server stopped')
 
@@ -61,7 +78,7 @@ name = config.create('name', 'Thermostat')
 wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
 mqtt = MQTTRepo(config=config, wlan=wlan, loop=loop)
-device = Device(config=config, mqtt=mqtt, wlan=wlan, name=name, api_type='thermostat', version='3.0')
+device = Device(config=config, mqtt=mqtt, wlan=wlan, loop=loop, name=name, api_type='thermostat', version='3.0')
 
 # The temperature sensor, found on PIN 22
 temp_sensor = TemperatureSensor(sensor_pin=22)
@@ -94,12 +111,13 @@ config.setup()
 auth.setup()
 mqtt.setup()
 wlan.setup()
+device.setup()
 auto_schedule.setup()
 heating.setup()
 controller.setup()
 
 install_mqtt(app=app, auth=auth, mqtt=mqtt)
-install_api(app=app, auth=auth, device=device, loop=loop)
+install_api(app=app, auth=auth, device=device)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
 install_wlan(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
 install_fs(app=app, auth=auth)

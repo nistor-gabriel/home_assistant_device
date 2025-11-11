@@ -1,3 +1,5 @@
+import time
+
 import yaml
 import subprocess
 import json
@@ -114,7 +116,13 @@ def collect_local_resources():
                 add_json(path_src, ctx['dist'].joinpath(dst).resolve().absolute(), ctx['dist'], file_names)
 
     for file in file_names:
-        files.append({'file': posixpath.normpath(file), 'hash': hash_file(ctx['dist'].joinpath(file))})
+        file_path = posixpath.normpath(file)
+        files.append({'file': file_path, 'hash': hash_file(ctx['dist'].joinpath(file)), 'isDir': False})
+        dir_name = posixpath.dirname(file_path)
+        while dir_name:
+            if not next((f for f in files if dir_name == f['file'] and f['isDir']), None):
+                files.append({'file': dir_name, 'hash': '', 'isDir': True})
+            dir_name = posixpath.dirname(dir_name)
 
     return files
 
@@ -130,9 +138,10 @@ def collect_remote_resources():
             raise Exception('Failed to get a response for "' + path + '" with code ' + str(response.status_code))
         for entry in response.json()['items']:
             if entry['isDir']:
+                files.append({'file': entry['path'][1:], 'hash': '', 'isDir': True})
                 tails.append(entry['path'][1:])
             else:
-                files.append({'file': entry['path'][1:], 'hash': entry.get('hash')})
+                files.append({'file': entry['path'][1:], 'hash': entry.get('hash'), 'isDir': False})
     return files
 
 
@@ -164,7 +173,7 @@ def collect_serial_resources():
 
 def update_serial(to_update: typ.List[typ.Dict]):
     for item in to_update:
-        if is_excluded(item['file']):
+        if is_excluded(item['file']) or item['isDir']:
             print('excluded file', item['file'])
             continue
         print('updating file', item['file'])
@@ -230,7 +239,7 @@ def compare(local_files: typ.List[typ.Dict], remote_files: typ.List[typ.Dict]):
 
 def update(to_update: typ.List[typ.Dict]):
     for item in to_update:
-        if is_excluded(item['file']):
+        if is_excluded(item['file']) or item['isDir']:
             print('excluded file', item['file'])
             continue
         append = False
@@ -240,6 +249,7 @@ def update(to_update: typ.List[typ.Dict]):
                 data = f.read(MAX_DATA_SIZE)
                 if not data:
                     break
+                time.sleep(0.3)
                 size += len(data)
                 response = requests.post(ctx['host'] + '/fs/' + item['file'] + ('?append=true' if append else ''),
                                          data, headers={

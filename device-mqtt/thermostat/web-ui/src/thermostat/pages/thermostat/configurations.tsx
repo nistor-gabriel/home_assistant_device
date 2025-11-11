@@ -111,9 +111,12 @@ const Configurations: React.FC<{
                                   <SelectValue placeholder="select a delta" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                  <SelectItem value="0.2">0.2°C</SelectItem>
                                   <SelectItem value="0.3">0.3°C</SelectItem>
                                   <SelectItem value="0.5">0.5°C</SelectItem>
                                   <SelectItem value="0.7">0.7°C</SelectItem>
+                                  <SelectItem value="0.8">0.8°C</SelectItem>
+                                  <SelectItem value="0.9">0.9°C</SelectItem>
                                   <SelectItem value="1">1°C</SelectItem>
                                 </SelectContent>
                               </Select>
@@ -127,16 +130,19 @@ const Configurations: React.FC<{
                         name="deltaEnd"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Temperature Delta Start</FormLabel>
+                            <FormLabel>Temperature Delta End</FormLabel>
                             <FormControl>
                               <Select value={field.value} onValueChange={field.onChange} disabled={field.disabled}>
                                 <SelectTrigger onBlur={field.onBlur} ref={field.ref}>
                                   <SelectValue placeholder="select a delta" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                  <SelectItem value="0.2">0.2°C</SelectItem>
                                   <SelectItem value="0.3">0.3°C</SelectItem>
                                   <SelectItem value="0.5">0.5°C</SelectItem>
                                   <SelectItem value="0.7">0.7°C</SelectItem>
+                                  <SelectItem value="0.8">0.8°C</SelectItem>
+                                  <SelectItem value="0.9">0.9°C</SelectItem>
                                   <SelectItem value="1">1°C</SelectItem>
                                 </SelectContent>
                               </Select>

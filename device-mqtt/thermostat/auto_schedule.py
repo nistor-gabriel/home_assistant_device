@@ -63,7 +63,7 @@ class AutoSchedule:
                 self._has_changed = False
                 f = open(self._filename, 'w')
                 # noinspection PyTypeChecker
-                json.dump(self._temp, f)
+                json.dump(self._temp, f, separators=(',', ':'))
                 f.close()
                 print('temperature file saved')
             await asyncio.sleep(5)

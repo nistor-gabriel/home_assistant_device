@@ -49,6 +49,7 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
             publish_stats()
         elif event == 'pumpOff':
             mqtt.put(path_pump, 'off')
+            mqtt.put(path_heating, 'off')
             publish_stats()
 
     def controller_listener(event: str):
@@ -60,6 +61,8 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
         elif event == 'thermostatOff':
             mqtt.put(path_thermostat, 'off')
             publish_stats()
+        elif event == 'mode':
+            mqtt.put(path_mode, controller.get_mode())
         elif event == 'temperatureTarget':
             mqtt.put(path_temperature_target, str(controller.get_target_temp()))
 
@@ -149,6 +152,8 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
         if heat_on is not None:
             if heat_on is util.INVALID:
                 return {'heatOn': 'invalid'}, 400
+            if controller.is_disabled():
+                return {'heatOn': 'disabled'}, 400
             if heat_on:
                 heating.on(heat_on * 60)
             else:
@@ -158,8 +163,8 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
         if mode is not None:
             if mode is util.INVALID or not controller.set_mode(mode):
                 return {'mode': 'invalid'}, 400
-            else:
-                mqtt.put(path_mode, mode)
+        else:
+            mqtt.put(path_mode, controller.get_mode())
 
     @app.put('/thermostat/config')
     @auth.with_auth

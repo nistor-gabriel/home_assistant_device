@@ -6,12 +6,10 @@ class Test(unittest.TestCase):
 
     # @unittest.SkipTest
     def test(self):
-        with open('../thermostat/thermostat_config.json', 'r', encoding='utf-8') as data:
-            cnt = data.read()
-            topic = cnt % {
-                'device_id': 'test'
-            }
-            print(topic)
+        publish_files = set()
+        aa = {'a': 'aa', 'b': 'bb'}
+        publish_files.update(aa.keys())
+        print(publish_files)
 
 
 if __name__ == '__main__':

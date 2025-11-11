@@ -41,11 +41,10 @@ class Config:
         except OSError:
             print('no config file available')
 
-        if not cnt:
-            return
-        for key in self._entries.keys():
-            if key in cnt:
-                self._entries[key].set(cnt[key])
+        if cnt:
+            for key in self._entries.keys():
+                if key in cnt:
+                    self._entries[key].set(cnt[key])
 
         self.has_changed = False
         self._loop.create_task(self._run())

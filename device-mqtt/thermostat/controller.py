@@ -44,6 +44,7 @@ class Controller:
         self._temp: float | None = None
         self._is_on = False
         self._temp_target: float = self.get_target_temp()
+        self._last_mode = self.get_mode()
 
     def setup(self):
         self._loop.create_task(self._run())
@@ -118,6 +119,9 @@ class Controller:
     def is_on(self):
         return self._is_on
 
+    def is_disabled(self):
+        return self._mode == self.MODE_DISABLED
+
     async def _run(self):
         await asyncio.sleep(25)  # wait 25 seconds so the time can be synchronized
         while True:
@@ -134,6 +138,11 @@ class Controller:
                     self._listeners.notify('temperature')
                 await asyncio.sleep(5)
                 continue
+
+            mode = self.get_mode()
+            if self._last_mode != mode:
+                self._listeners.notify('mode')
+                self._last_mode = mode
 
             temp_target = self.get_target_temp()
             if self._temp_target != temp_target:

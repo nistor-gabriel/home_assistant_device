@@ -26,20 +26,14 @@ from umqttsimple import MQTTClient
 from wlan import Wlan
 
 
-class DataEntry:
-
-    def __init__(self, msg: str, lazy: bool):
-        self.msg = msg
-        self.lazy = lazy
-
-
 class MQTTRepo:
 
-    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 0.5,
-                 interval_mqtt_reconnect: float = 30, interval_mqtt_keepalive: float = 60):
+    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 0.1,
+                 interval_mqtt_reconnect: float = 5, interval_mqtt_keepalive: float = 60):
         self._wlan = wlan
         self._loop = loop
-        self._data: typ.Dict[str, DataEntry] = {}
+        self._pending: typ.Union[None, typ.Dict[str, (str, bool)]] = None
+        self._lazy: typ.Dict[str, str] = {}
         self._server = config.create('mqtt_server', '')
         self._port = config.create('mqtt_port', 0)
         self._user = config.create('mqtt_user', '')
@@ -52,8 +46,8 @@ class MQTTRepo:
         self._interval_mqtt_check = interval_mqtt_check
         self._interval_mqtt_reconnect = interval_mqtt_reconnect
         self._interval_mqtt_keepalive = interval_mqtt_keepalive
-        self._connected_listeners = util.Listeners()
         self._subscriptions: typ.Dict[str, typ.List[typ.Callable[[str, str], None]]] = {}
+        self._connected_processed = False
 
     def get_server(self):
         return self._server.get()
@@ -100,54 +94,44 @@ class MQTTRepo:
         self._pass.set(password)
         self._disconnect()
 
-    def add_connected_listener(self, listener: typ.Callable[[], None]):
-        return self._connected_listeners.add(listener)
-
     def setup(self):
-        def on_connect(has_internet: bool):
-            if has_internet:
-                self._loop.create_task(self._start())
+        self._loop.create_task(self._run())
 
-        def on_disconnect():
-            self._shutdown()
-
-        self._wlan.add_connect_listener(on_connect)
-        self._wlan.add_disconnect_listener(on_disconnect)
-
-    async def _start(self):
-        if self._is_connecting:
-            return
-        self._is_connecting = True
-
+    async def _run(self):
         def sub_cb(topic, msg):
             topic_str = topic.decode()
             msg_str = msg.decode()
-            # print('DEBUG: received for topic', topic_str, 'the message', msg_str)
+            # print('DEBUG: received for topic %s the message %s' % (topic_str, msg_str))
             cbs = self._subscriptions.get(topic_str)
             if cbs:
                 for cb in cbs:
                     cb(topic_str, msg_str)
 
-        while self._is_connecting:
-            if self._server.get() and not self._client:
-                try:
-                    client = MQTTClient(self.get_active_client_id().encode(), self._server.get(),
-                                        user=self._user.get(), password=self._pass.get(),
-                                        port=self._port.get(), ssl=self._ssl.get(),
-                                        keepalive=self._interval_mqtt_keepalive)
-                    client.set_last_will(
-                        'device/%(id)s/status' % {'id': self.get_active_client_id()}, 'offline', True, 1)
-                    client.set_callback(sub_cb)
-                    client.connect(clean_session=False)
-                    self._client = client
-                    print('connected to %s MQTT broker' % (self._server.get(),))
-                    self._connected()
-                except Exception as e:
-                    print('ERROR: failed to connect to %s MQTT broker' % (self._server.get(),))
-                    # noinspection PyUnresolvedReferences
-                    sys.print_exception(e)
-                    self._disconnect()
-                    await asyncio.sleep(self._interval_mqtt_reconnect)
+        count = 0
+        while True:
+            if self._wlan.wlan and self._wlan.wlan.isconnected():
+                if not self._client and self._server.get():
+                    try:
+                        client = MQTTClient(self.get_active_client_id().encode(), self._server.get(),
+                                            user=self._user.get(), password=self._pass.get(),
+                                            port=self._port.get(), ssl=self._ssl.get(),
+                                            keepalive=self._interval_mqtt_keepalive)
+                        client.set_last_will(
+                            'device/%(id)s/status' % {'id': self.get_active_client_id()}, 'offline', True)
+                        client.set_callback(sub_cb)
+                        client.connect(clean_session=True)
+                        self._client = client
+                        # print('DEBUG: processing subscriptions')
+                        self.put('device/%(id)s/status', 'online')
+                        for topic_sub in self._subscriptions:
+                            self._subscribe(topic_sub)
+                        print('connected to %s MQTT broker' % (self._server.get(),))
+                    except Exception as e:
+                        print('ERROR: failed to connect to %s MQTT broker' % (self._server.get(),))
+                        # noinspection PyUnresolvedReferences
+                        sys.print_exception(e)
+                        self._disconnect()
+                        await asyncio.sleep(self._interval_mqtt_reconnect)
 
             if self._client:
                 try:
@@ -158,51 +142,53 @@ class MQTTRepo:
                         # noinspection PyUnresolvedReferences
                         sys.print_exception(e)
                         self._disconnect()
-                await asyncio.sleep(self._interval_mqtt_check)
-            else:
-                await asyncio.sleep(self._interval_mqtt_reconnect)
+
+            if count > 5 and self._client and self._pending is not None:
+                count = 0  # We push pending message every 10 msg checks
+                try:
+                    topic_pending, (msg_pending, lazy_pending) = self._pending.popitem()
+                    self.put(topic_pending, msg_pending, lazy_pending)
+                    # print('DEBUG: put pending %s' % (topic_pending,))
+                except KeyError:
+                    self._pending = None
+
+            count += 1
+            await asyncio.sleep(self._interval_mqtt_check)
 
     def _publish(self, topic: str, msg: str, lazy: bool):
         if self._client:
             if lazy:
-                data = self._data.get(topic)
-                if data and data.msg == msg:
-                    return
+                msg_lazy = self._lazy.get(topic, None)
+                if msg_lazy is not None and msg_lazy == msg:
+                    return True
             try:
-                self._client.publish(topic, msg, True, 1)
+                self._client.publish(topic, msg, True)
+                if lazy:
+                    self._lazy[topic] = msg
+                return True
             except Exception as e:
                 print('ERROR: exception occurred on publish "%s": "%s"' % (topic, msg))
                 # noinspection PyUnresolvedReferences
                 sys.print_exception(e)
                 self._disconnect()
 
-        if not self._client or lazy:
-            self._data[topic] = DataEntry(msg, lazy)
+        self._pending = self._pending if self._pending else {}
+        self._pending[topic] = (msg, lazy)
+        return False
 
     def _subscribe(self, topic: str):
         if self._client:
             try:
-                self._client.subscribe(topic, 1)
+                self._client.subscribe(topic)
             except Exception as e:
                 print('ERROR: exception occurred on subscribe "%s"' % (topic,))
                 # noinspection PyUnresolvedReferences
                 sys.print_exception(e)
                 self._disconnect()
 
-    def _connected(self):
-        self.put('device/%(id)s/status', 'online')
-        self._connected_listeners.notify()
-        for topic in self._subscriptions:
-            self._subscribe(topic)
-        for topic in list(self._data.keys()):
-            data = self._data[topic]
-            self._publish(topic, data.msg, False)
-            if not self._client:
-                break
-            if not data.lazy:
-                del self._data[topic]
-
     def _disconnect(self):
+        self._connected_processed = False
+        self._lazy.clear()
         if self._client:
             try:
                 self._client.disconnect()
@@ -210,10 +196,6 @@ class MQTTRepo:
                 pass
             self._client = None
             print('disconnected from %s MQTT broker' % (self._server.get(),))
-
-    def _shutdown(self):
-        self._is_connecting = False
-        self._disconnect()
 
     def subscribe(self, topic: str, cb: typ.Callable[[str, str], None]):
         topic = topic % {'id': self.get_active_client_id()}
@@ -227,7 +209,7 @@ class MQTTRepo:
 
     def put(self, topic: str, msg: str, lazy: bool = True):
         topic = topic % {'id': self.get_active_client_id()}
-        self._publish(topic, msg, lazy)
+        return self._publish(topic, msg, lazy)
 
     def put_obj(self, topic: str, obj, lazy: bool = True):
-        self.put(topic, json.dumps(obj, separators=(',', ':')), lazy)
+        return self.put(topic, json.dumps(obj, separators=(',', ':')), lazy)

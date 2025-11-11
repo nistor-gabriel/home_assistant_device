@@ -17,7 +17,7 @@ except ImportError:
     import uasyncio as asyncio
 
 
-def install_api(app: Microdot, auth: Auth, device: Device, loop: asyncio.AbstractEventLoop):
+def install_api(app: Microdot, auth: Auth, device: Device):
 
     @app.get('/api')
     @auth.with_auth
@@ -49,9 +49,9 @@ def install_api(app: Microdot, auth: Auth, device: Device, loop: asyncio.Abstrac
             if is_reset is util.INVALID:
                 return {'reset': 'invalid'}, 400
             if is_reset is True:
-                loop.create_task(device.reset())
+                device.reset()
 
     @app.delete('/api')
     @auth.with_auth
     def handle_delete_api(_request: Request):
-        loop.create_task(device.reboot())
+        device.reboot()

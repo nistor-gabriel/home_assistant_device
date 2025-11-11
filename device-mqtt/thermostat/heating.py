@@ -36,7 +36,7 @@ class Heating:
         self._pump_period = config.create('heating_pump_period', pump_period)
 
         self._listeners = util.Listeners()
-
+# TODO: add disabled
         self._is_pump_on = False
         self._is_heat_on = False
         self._stop_time = 0

@@ -22,11 +22,12 @@ except ImportError:
 
 class Device:
 
-    def __init__(self, config: Config, mqtt: MQTTRepo, wlan: Wlan, name: ConfigEntry,
+    def __init__(self, config: Config, mqtt: MQTTRepo, wlan: Wlan, loop: asyncio.AbstractEventLoop, name: ConfigEntry,
                  api_type: str, version: str = '1.0'):
         self._config = config
         self._mqtt = mqtt
         self._wlan = wlan
+        self._loop = loop
         self._name = name
         self._api_type = api_type
         self._version = version
@@ -36,24 +37,19 @@ class Device:
         ]] = {
             'device_config.json': None,
         }
-        self._has_published = False
+        self._is_reboot = False
+        self._is_reset = False
+        self._published: typ.Set[str] = set()
+        self._publishing = True
 
-        def publish_device_config():
-            if not self._has_published:
-                self._has_published = True
-                self.publish_device_config()
+    def setup(self):
+        self._loop.create_task(self._run())
 
-        mqtt.add_connected_listener(publish_device_config)
+    def reset(self):
+        self._is_reset = True
 
-    async def reset(self):
-        await asyncio.sleep(0.3)
-        self._config.reset()
-        machine.reset()
-
-    @staticmethod
-    async def reboot():
-        await asyncio.sleep(0.3)
-        machine.reset()
+    def reboot(self):
+        self._is_reboot = True
 
     def get_name(self):
         return self._name.get()
@@ -62,7 +58,8 @@ class Device:
         if not util.is_str(name, min_len=3, max_len=50):
             return False
         self._name.set(name)
-        self.publish_device_config()
+        self._publishing = True
+        self._published.clear()
         return True
 
     def get_api_type(self):
@@ -74,16 +71,12 @@ class Device:
     def add_config(self, file: str,
                    vars_source: typ.Callable[[], typ.Generator[typ.Dict[str, str], None, None]] = None):
         self._configs[file] = vars_source
+        return lambda: self._clear_publish(file)
 
-        return lambda: self._publish_config(file)
-
-    def publish_device_config(self):
-        var_s = self._build_vars()
-        template = self._read_template()
-
-        for file in self._configs:
-            gc.collect()
-            self._publish_config(file, var_s=var_s, template=template)
+    def _clear_publish(self, file: str):
+        file_prefix = file + ':'
+        self._published = set(path for path in self._published if not path.startswith(file_prefix))
+        self._publishing = True
 
     def _build_vars(self):
         ip = self._wlan.get_ip()
@@ -101,23 +94,26 @@ class Device:
         with open('device_template.json') as json_file:
             return json.load(json_file)
 
-    def _publish_config(self, file: str, var_s: typ.Union[typ.Dict, None] = None,
-                        template: typ.Union[typ.Dict, None] = None):
-        if not var_s:
+    def _iter_all_configs(self):
+        for file in self._configs:
             var_s = self._build_vars()
-        if not template:
             template = self._read_template()
 
-        vars_source = self._configs[file]
-        if vars_source:
-            for vars_extra in vars_source():
-                vars_all = dict(var_s)
-                vars_all.update(vars_extra)
-                self._put_config(file, template, vars_all)
-        else:
-            self._put_config(file, template, var_s)
+            vars_source = self._configs[file]
+            if vars_source:
+                for vars_extra in vars_source():
+                    vars_all = dict(var_s)
+                    vars_all.update(vars_extra)
+                    for pkg in self._iter_config(file, template, vars_all):
+                        yield pkg
+            else:
+                for pkg in self._iter_config(file, template, var_s):
+                    yield pkg
 
-    def _put_config(self, file: str, template: typ.Dict, var_s: typ.Dict[str, str]):
+            gc.collect()
+
+    @staticmethod
+    def _iter_config(file: str, template: typ.Dict, var_s: typ.Dict[str, str]):
         with open(file) as json_file:
             data = json.load(json_file)
         tpl = data.get('@template')
@@ -136,5 +132,38 @@ class Device:
             msg_str = msg_str + ' '
             # we need a whitespace at the end because somme times the last character  is lost in communication.
             # print('DEBUG: publishing message "%s": %s' % (topic, msg_str))
-            self._mqtt.put(topic, '', lazy=False)
-            self._mqtt.put(topic, msg_str, lazy=False)
+            yield file, topic, msg_str
+
+    async def _run(self):
+        while True:
+
+            if self._is_reset:
+                self._config.reset()
+                machine.reset()
+                return
+
+            if self._is_reboot:
+                machine.reset()
+                return
+
+            if self._publishing and self._mqtt.is_connected():
+                # print('DEBUG: publishing the device configurations')
+                self._publishing = False
+                for (file, topic, msg) in self._iter_all_configs():
+                    path = file + ':' + topic
+                    if path in self._published:
+                        continue
+                    if not self._mqtt.put(topic, '', lazy=False):
+                        self._publishing = True
+                        break
+
+                    await asyncio.sleep(0.5)
+
+                    if not self._mqtt.put(topic, msg, lazy=False):
+                        self._publishing = True
+                        break
+                    # print('DEBUG: published %s from file %s' % (topic, file))
+                    self._published.add(path)
+                    await asyncio.sleep(0.5)
+
+            await asyncio.sleep(1)

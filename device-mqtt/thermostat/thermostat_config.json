@@ -65,17 +65,5 @@
     "unique_id": "%(device_id)s_thermostat",
     "object_id": "%(device_id)s_thermostat",
     "icon": "mdi:thermostat"
-  },
-  "homeassistant/switch/%(device_id)s/heating/config": {
-    "name": "Heating",
-    "object_id": "%(device_id)s_heating",
-    "unique_id": "%(device_id)s_heating",
-    "state_topic": "device/%(device_id)s/heating",
-    "command_topic": "device/%(device_id)s/heating/set",
-    "payload_on": "on",
-    "payload_off": "off",
-    "state_on": "on",
-    "state_off": "off",
-    "optimistic": true
   }
 }

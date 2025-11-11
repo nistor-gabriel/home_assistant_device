@@ -1,0 +1,47 @@
+square: false
+type: grid
+cards:
+  - type: entities
+    entities:
+      - entity: switch.thermostat_etaj_heating
+        name: Incalzire
+      - entity: number.thermostat_etaj_heatingtimeout
+        name: Timeout
+      - entity: select.thermostat_etaj_mode
+      - entity: sensor.thermostat_etaj_temperature
+        name: Temperatura
+    show_header_toggle: false
+    state_color: true
+  - type: entity-filter
+    entities:
+      - climate.thermostat_etaj_thermostat_climate
+    state_filter:
+      - operator: "!="
+        value: unavailable
+    show_empty: false
+    card:
+      type: entities
+  - type: entity-filter
+    entities:
+      - sensor.thermostat_etaj_thermostat
+      - sensor.thermostat_etaj_heat
+    state_filter:
+      - operator: "!="
+        value: "off"
+    show_empty: false
+    card:
+      type: entities
+  - type: entity-filter
+    entities:
+      - sensor.thermostat_etaj_temperaturetarget
+      - sensor.thermostat_etaj_heating_stoptimeout
+      - sensor.thermostat_etaj_heating_offsince
+      - sensor.thermostat_etaj_heating_onsince
+    state_filter:
+      - operator: "!="
+        value: unknown
+    show_empty: false
+    card:
+      type: entities
+columns: 1
+title: Incalzire Hol Parter
