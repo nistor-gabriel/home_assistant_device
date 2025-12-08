@@ -38,7 +38,7 @@ def on_disconnect():
 
 
 config = Config(filename='config.json', loop=loop)
-name = config.create('name', 'Garden Core')
+name = config.create('name', 'Sprinkler 5')
 wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
 mqtt = MQTTRepo(config=config, wlan=wlan, loop=loop)

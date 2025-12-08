@@ -54,8 +54,8 @@ class Listeners:
 
 is_time_synchronized: bool = False
 __synchronizing: bool = False
-hosts = ['pool.ntp.org', '89.36.93.8']
-start_time = mtime.time()
+__hosts = ['pool.ntp.org', '89.36.93.8']
+__start_time = mtime.time()
 timezone = {
     'name': 'GMT',
     'std_offset': 0,
@@ -123,17 +123,17 @@ def local_time():
 
 
 def uptime():
-    return mtime.time() - start_time
+    return mtime.time() - __start_time
 
 
 async def synchronize_time():
     # print('DEBUG: synchronize time')
-    global is_time_synchronized, start_time, __synchronizing
+    global is_time_synchronized, __start_time, __synchronizing
     if __synchronizing:
         return
     __synchronizing = True
     while not is_time_synchronized:
-        for host in hosts:
+        for host in __hosts:
             try:
                 ntptime.host = host
                 ntptime.settime()
@@ -144,7 +144,7 @@ async def synchronize_time():
                 # noinspection PyUnresolvedReferences
                 sys.print_exception(e)
         if is_time_synchronized:
-            start_time = mtime.mktime(local_time())
+            __start_time = mtime.time()
             print('local time after synchronization：%s' % format_date(local_time()))
             break
 

@@ -113,6 +113,8 @@ class Wlan:
                     password = self._pass.get()
 
                 self.wlan = network.WLAN(network.STA_IF)
+                self.wlan.config(pm=network.WLAN.PM_PERFORMANCE, txpower=20)
+                self.wlan.config(txpower=20)
                 self.wlan.active(True)
                 self.wlan.connect(ssid, password)
 
@@ -161,7 +163,7 @@ class Wlan:
                         break
 
                     # print('DEBUG: wlan waiting')
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(30)
                     # print('DEBUG: wlan after waiting')
             else:
                 # print('DEBUG: wlan starting AP')

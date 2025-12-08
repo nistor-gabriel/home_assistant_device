@@ -1,7 +1,7 @@
 #!/bin/bash
 ROOT_PROJ="$( cd "$( dirname "$0" )" && pwd )"
 ROOT_DIST=$ROOT_PROJ/__dist__
-ROOT="$( cd $ROOT_PROJ && cd ../ && pwd )"
+ROOT="$( cd $ROOT_PROJ && cd ../.. && pwd )"
 
 . ./env-device.sh
 
@@ -32,10 +32,10 @@ ROOT="$( cd $ROOT_PROJ && cd ../ && pwd )"
 #pjson put ../lib/device_template.json device_template.json
 #pjson put ../wlan_config.json config.json
 ## ----------------------------------------------------------------------------------------------------------------------
-ppy put setup.py setup.py
+#ppy put setup.py setup.py
 ## ----------------------------------------------------------------------------------------------------------------------
 #ampy rm sprinkler.py
 #ampy rm api_config.json
 #ampy rm device_config.json
 
-#ampy rmdir /microdot
+ampy rmdir /microdot

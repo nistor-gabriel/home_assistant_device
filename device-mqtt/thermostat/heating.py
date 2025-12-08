@@ -36,7 +36,6 @@ class Heating:
         self._pump_period = config.create('heating_pump_period', pump_period)
 
         self._listeners = util.Listeners()
-# TODO: add disabled
         self._is_pump_on = False
         self._is_heat_on = False
         self._stop_time = 0
@@ -129,28 +128,35 @@ class Heating:
         self._stop_time = timeout
         self._is_auto_stop = is_auto_stop
 
-        self._start_pump()
-        self._is_stop_offset = self._is_auto_stop_pump = False
+        self._is_stop_offset = False
+        self._is_auto_stop_pump = False
         self._is_start_offset = True
+        self._start_pump()
         return True
 
     def _start_pump(self):
         if self._is_pump_on:
             return
         self._is_pump_on = True
-        self._pin_pump.low()
         self._on_since = util.time()
-        self._listeners.notify('pumpOn')
+        self._pin_pump.low()
+        if self._is_auto_stop_pump:
+            self._listeners.notify('pumpOnAuto')
+        else:
+            self._listeners.notify('pumpOn')
         print('started pump')
 
     def _start_maintenance(self):
-        self._start_pump()
         self._is_auto_stop_pump = True
+        self._off_since = util.time()
+        self._start_pump()
 
     def _stop_pump(self):
         if not self._is_pump_on:
             return
-        self._is_pump_on = self._is_auto_stop = self._is_auto_stop_pump = False
+        self._is_pump_on = False
+        self._is_auto_stop = False
+        self._is_auto_stop_pump = False
         self._pin_pump.high()
         self._off_since = util.time()
         self._on_since = None

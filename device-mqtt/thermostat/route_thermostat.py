@@ -47,6 +47,9 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
             mqtt.put(path_pump, 'on')
             mqtt.put(path_heating, 'on')
             publish_stats()
+        elif event == 'pumpOnAuto':
+            mqtt.put(path_pump, 'on')
+            publish_stats()
         elif event == 'pumpOff':
             mqtt.put(path_pump, 'off')
             mqtt.put(path_heating, 'off')

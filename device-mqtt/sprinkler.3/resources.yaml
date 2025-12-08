@@ -36,8 +36,6 @@
   src: ../lib/route_ui.py
 - dst: route_switch.py
   src: ../lib/route_switch.py
-#- dst: watchdog.py
-#  src: ../lib/watchdog.py
 
 - dst: stats_config.json
   src: ../lib/stats_config.json

@@ -107,6 +107,7 @@ class MQTTRepo:
                 for cb in cbs:
                     cb(topic_str, msg_str)
 
+        # last_ping = util.uptime()
         count = 0
         while True:
             if self._wlan.wlan and self._wlan.wlan.isconnected():
@@ -133,15 +134,25 @@ class MQTTRepo:
                         self._disconnect()
                         await asyncio.sleep(self._interval_mqtt_reconnect)
 
+            # if self._client:
+            #     if util.uptime() - last_ping > self._interval_mqtt_keepalive / 2:
+            #         try:
+            #             self._client.ping()
+            #             last_ping = util.uptime()
+            #         except OSError as e:
+            #             print('ERROR: exception occurred on ping:', e)
+            #             # noinspection PyUnresolvedReferences
+            #             sys.print_exception(e)
+            #             self._disconnect()
+
             if self._client:
                 try:
                     self._client.check_msg()
                 except OSError as e:
-                    if str(e).find('104') >= 0:
-                        print('ERROR: exception occurred on message check:', e)
-                        # noinspection PyUnresolvedReferences
-                        sys.print_exception(e)
-                        self._disconnect()
+                    print('ERROR: exception occurred on message check:', e)
+                    # noinspection PyUnresolvedReferences
+                    sys.print_exception(e)
+                    self._disconnect()
 
             if count > 5 and self._client and self._pending is not None:
                 count = 0  # We push pending message every 10 msg checks
