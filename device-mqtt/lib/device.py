@@ -40,7 +40,7 @@ class Device:
         self._is_reboot = False
         self._is_reset = False
         self._published: typ.Set[str] = set()
-        self._publishing = True
+        self._publishing = False
 
     def setup(self):
         self._loop.create_task(self._run())
@@ -51,6 +51,13 @@ class Device:
     def reboot(self):
         self._is_reboot = True
 
+    def publish(self):
+        if not self._mqtt.is_connected():
+            return False
+        self._publishing = True
+        self._published.clear()
+        return True
+
     def get_name(self):
         return self._name.get()
 
@@ -58,8 +65,7 @@ class Device:
         if not util.is_str(name, min_len=3, max_len=50):
             return False
         self._name.set(name)
-        self._publishing = True
-        self._published.clear()
+        self.publish()
         return True
 
     def get_api_type(self):
@@ -164,6 +170,6 @@ class Device:
                         break
                     # print('DEBUG: published %s from file %s' % (topic, file))
                     self._published.add(path)
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(2)
 
             await asyncio.sleep(1)

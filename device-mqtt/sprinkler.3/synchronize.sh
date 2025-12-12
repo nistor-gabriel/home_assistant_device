@@ -1,33 +1,36 @@
 #!/bin/bash
-ROOT_PROJ="$( cd "$( dirname "$0" )" && pwd )"
-ROOT_DEV="$( cd "$ROOT_PROJ" && cd ../ && pwd )"
-ROOT_DIST=$ROOT_PROJ/__dist__
-ROOT_CACHE=$ROOT_PROJ/__cache__
-ROOT="$( cd "$ROOT_PROJ" && cd ../ && pwd )"
-PYTHON=$ROOT/venv/bin/python3.9
+
+CALLER="$( cd "$( dirname "$0" )" && pwd )"
+cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" || exit 1
+
+. ../tools/env-synchronize.sh
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-. ./env-node-js.sh
-
-cd "$ROOT_PROJ/web-ui" || exit 1
-npm run build
-cd dist || exit 1
-chown -R gabriel:gabriel .
-rm -R -f "$ROOT_DIST"
-mkdir -p "$ROOT_DIST"
+(
+(! ${FULL+"false"}) \
+#|| true
+) && build_web
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-cd "$ROOT_PROJ" || exit 1
+(
+(! ${FULL+"false"}) \
+#|| true
+) && sync -u admin -p sigma2000 192.168.100.84
 
-#$PYTHON "$ROOT_DEV/tools/synchronize.py" -d "$ROOT_DIST" remote -u admin -p sigma2000 192.168.100.82
+# ----------------------------------------------------------------------------------------------------------------------
 
-#$PYTHON "$ROOT_DEV/tools/synchronize.py" -d "$ROOT_DIST" serial -c "$ROOT_CACHE" --dry true /dev/ttyACM0
+(
+(! ${FULL+"false"}) \
+#|| true
+) && sync -u admin -p sigma2000 192.168.100.85
 
-$PYTHON "$ROOT_DEV/tools/synchronize.py" -d "$ROOT_DIST" serial -c "$ROOT_CACHE" /dev/ttyACM0
+# ----------------------------------------------------------------------------------------------------------------------
 
-chown -R gabriel:gabriel "$ROOT_DIST"
-if [ -d "$ROOT_CACHE" ]; then
-  chown -R gabriel:gabriel "$ROOT_CACHE"
-fi
+#syncs
+#syncs --dry true
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+cd "$CALLER" || exit 1

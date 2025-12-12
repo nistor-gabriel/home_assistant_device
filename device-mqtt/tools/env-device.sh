@@ -1,5 +1,6 @@
 #!/bin/bash
 PORT=/dev/ttyACM0
+ROOT="$( cd "$( dirname "$0" )" && cd .. && pwd )"
 PYTHON=$ROOT/venv/bin/python3.9
 
 ppy()

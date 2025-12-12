@@ -16,14 +16,15 @@ except ImportError:
 class WatchDog:
 
     def __init__(self, loop: asyncio.AbstractEventLoop):
-        self._wdt = None
         self._loop = loop
 
     def setup(self):
-        self._wdt = WDT(timeout=8000)
         self._loop.create_task(self._run())
 
+    # noinspection PyMethodMayBeStatic
     async def _run(self):
+        await asyncio.sleep(30)  # 30 seconds until we start the watchdog
+        wdt = WDT(timeout=8000)
         while True:
-            self._wdt.feed()
+            wdt.feed()
             await asyncio.sleep(2)

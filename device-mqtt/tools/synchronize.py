@@ -114,6 +114,8 @@ def collect_local_resources():
                 files.append({'file': posixpath.normpath(dst), 'ignore': True, 'hash': ''})
             else:
                 add_json(path_src, ctx['dist'].joinpath(dst).resolve().absolute(), ctx['dist'], file_names)
+        elif ignore_:
+            files.append({'file': posixpath.normpath(dst), 'ignore': True, 'hash': ''})
 
     for file in file_names:
         file_path = posixpath.normpath(file)
@@ -382,18 +384,18 @@ def remote(ip, user, password, dry):
             print('removing file', item['file'])
             has_changed = True
         if has_changed:
-            print('All Done!')
+            print('Device "' + ip + '" all Done!')
         else:
-            print('Device is up to date, no updates required')
+            print('Device "' + ip + '" is up to date, no updates required')
     else:
         update(to_update)
         remove(to_remove)
         if not ctx['has_changed']:
-            print('Device is up to date, no updates required')
+            print('Device "' + ip + '" is up to date, no updates required')
         elif ctx['has_error']:
-            print('Done with errors, pleas try again!')
+            print('Device "' + ip + '" done with errors, please try again!')
         else:
-            print('All Done, rebooting device!')
+            print('Device "' + ip + '" all done, rebooting device!')
             requests.delete('http://' + ip + '/api', headers={'authorization': ctx['authorization']})
 
 

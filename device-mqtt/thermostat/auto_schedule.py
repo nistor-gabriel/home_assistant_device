@@ -1,6 +1,7 @@
 import json
 import util_temp
 import util
+import log
 
 try:
     import typ
@@ -27,8 +28,8 @@ class AutoSchedule:
             # noinspection PyTypeChecker
             self._temp = json.load(f)
             f.close()
-        except OSError:
-            print('no temperature file available')
+        except OSError as e:
+            log.info('no temperature file available')
 
         self._has_changed = False
         self._loop.create_task(self._run())
@@ -65,5 +66,5 @@ class AutoSchedule:
                 # noinspection PyTypeChecker
                 json.dump(self._temp, f, separators=(',', ':'))
                 f.close()
-                print('temperature file saved')
+                log.info('temperature file saved')
             await asyncio.sleep(5)

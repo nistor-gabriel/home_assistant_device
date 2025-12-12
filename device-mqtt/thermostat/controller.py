@@ -4,6 +4,7 @@ from heating import Heating
 from auto_schedule import AutoSchedule
 import util
 import util_temp
+import log
 
 try:
     import typ
@@ -133,7 +134,7 @@ class Controller:
                     self._is_on = False
                     self._heating.off()
                     self._listeners.notify('thermostatOn')
-                    print('thermostat off, no temp')
+                    log.info('thermostat off, no temp')
                 if has_changed:
                     self._listeners.notify('temperature')
                 await asyncio.sleep(5)
@@ -154,12 +155,12 @@ class Controller:
                         self._is_on = False
                         self._heating.off()
                         self._listeners.notify('thermostatOff')
-                        print('thermostat off')
+                        log.info('thermostat off')
                 elif self._temp < self._temp_target - self._delta_start.get():
                     self._is_on = True
                     self._heating.on_continuously()
                     self._listeners.notify('thermostatOn')
-                    print('thermostat on')
+                    log.info('thermostat on')
 
             if has_changed:
                 self._listeners.notify('temperature')

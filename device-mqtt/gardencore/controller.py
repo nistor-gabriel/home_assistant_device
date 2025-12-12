@@ -2,6 +2,7 @@ from config import Config
 from switch import Switch
 from blinker import Blinker
 import util
+import log
 
 try:
     import typ
@@ -60,7 +61,7 @@ class Controller:
 
     def set_off_low_pressure(self, off_low_pressure: float):
         if not util.is_float(off_low_pressure, min_value=0, max_ex_value=self._off_high_pressure.get()):
-            print('ERROR: invalid off low pressure')
+            log.error('invalid off low pressure')
             return False
         if self._off_low_pressure.get() != off_low_pressure:
             self._off_low_pressure.set(off_low_pressure)
@@ -74,7 +75,7 @@ class Controller:
 
     def set_off_low_period(self, off_low_period: int):
         if not util.is_int(off_low_period, min_ex_value=0):
-            print('ERROR: invalid off low timeout')
+            log.error('invalid off low timeout')
             return False
         if self._off_low_period.get() != off_low_period:
             self._off_low_period.set(off_low_period)
@@ -85,7 +86,7 @@ class Controller:
 
     def set_off_low_start_period(self, off_low_start_period: int):
         if not util.is_int(off_low_start_period, min_ex_value=0):
-            print('ERROR: invalid off low start timeout')
+            log.error('invalid off low start timeout')
             return False
         if self._off_low_start_period.get() != off_low_start_period:
             self._off_low_start_period.set(off_low_start_period)
@@ -96,7 +97,7 @@ class Controller:
 
     def set_off_high_pressure(self, off_high_pressure: float):
         if not util.is_float(off_high_pressure, min_ex_value=self._off_low_pressure.get()):
-            print('ERROR: invalid off high pressure')
+            log.error('invalid off high pressure')
             return False
         if self._off_high_pressure.get() != off_high_pressure:
             self._off_high_pressure.set(off_high_pressure)
@@ -107,7 +108,7 @@ class Controller:
 
     def set_off_high_period(self, off_high_period: int):
         if not util.is_int(off_high_period, min_ex_value=0):
-            print('ERROR: invalid off high timeout')
+            log.error('invalid off high timeout')
             return False
         if self._off_high_period.get() != off_high_period:
             self._off_high_period.set(off_high_period)
@@ -178,7 +179,7 @@ class Controller:
         self._off_high_time = int(self._off_high_period.get() / self._interval_update_pressure)
         self._is_pump_on = True
         self._listeners.notify('pumpOn')
-        print('DEBUG: started pump off high time', self._off_high_time)
+        log.info('started pump off high time %s' % (self._off_high_time, ))
 
     def _switch_off(self):
         self._off_low_time = 0

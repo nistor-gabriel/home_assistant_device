@@ -7,6 +7,7 @@ from auth import Auth
 from auto_schedule import AutoSchedule
 import time
 import util
+import log
 
 
 def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: Controller,
@@ -83,8 +84,8 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
     def cb_timeout(_topic: str, msg: str):
         try:
             ctx['timeout'] = int(msg)
-        except ValueError:
-            print('ERROR: invalid stop timeout number received: %s' % (msg,))
+        except ValueError as e:
+            log.error('invalid stop timeout number received: %s' % (msg,), e)
             return
         mqtt.put(path_heating_timeout, str(ctx['timeout']))
 

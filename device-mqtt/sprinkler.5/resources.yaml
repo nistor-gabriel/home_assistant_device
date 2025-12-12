@@ -3,12 +3,16 @@
 - dst: umqttsimple.py
   src: ../vendor/umqttsimple.py
 
+- dst: log.py
+  src: ../lib/log.py
 - dst: config.py
   src: ../lib/config.py
 - dst: wlan.py
   src: ../lib/wlan.py
 - dst: auth.py
   src: ../lib/auth.py
+- dst: watchdog.py
+  src: ../lib/watchdog.py
 
 - dst: mqtt_repo.py
   src: ../lib/mqtt_repo.py
@@ -66,4 +70,6 @@
   type: gzip
 
 - dst: config.json
-  ignore: true
+  ignore: Yes
+- dst: log.txt
+  ignore: Yes

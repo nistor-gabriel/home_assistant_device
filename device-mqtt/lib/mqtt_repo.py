@@ -18,9 +18,9 @@ except ImportError:
     # noinspection SpellCheckingInspection
     machine = typ.Any
 
-import sys
 import json
 import util
+import log
 from config import Config
 from umqttsimple import MQTTClient
 from wlan import Wlan
@@ -126,11 +126,9 @@ class MQTTRepo:
                         self.put('device/%(id)s/status', 'online')
                         for topic_sub in self._subscriptions:
                             self._subscribe(topic_sub)
-                        print('connected to %s MQTT broker' % (self._server.get(),))
+                        log.info('connected to %s MQTT broker' % (self._server.get(),))
                     except Exception as e:
-                        print('ERROR: failed to connect to %s MQTT broker' % (self._server.get(),))
-                        # noinspection PyUnresolvedReferences
-                        sys.print_exception(e)
+                        log.error('failed to connect to %s MQTT broker' % (self._server.get(),), e)
                         self._disconnect()
                         await asyncio.sleep(self._interval_mqtt_reconnect)
 
@@ -149,9 +147,7 @@ class MQTTRepo:
                 try:
                     self._client.check_msg()
                 except OSError as e:
-                    print('ERROR: exception occurred on message check:', e)
-                    # noinspection PyUnresolvedReferences
-                    sys.print_exception(e)
+                    log.error('exception occurred on message check:', e)
                     self._disconnect()
 
             if count > 5 and self._client and self._pending is not None:
@@ -178,9 +174,7 @@ class MQTTRepo:
                     self._lazy[topic] = msg
                 return True
             except Exception as e:
-                print('ERROR: exception occurred on publish "%s": "%s"' % (topic, msg))
-                # noinspection PyUnresolvedReferences
-                sys.print_exception(e)
+                log.error('exception occurred on publish "%s": "%s"' % (topic, msg), e)
                 self._disconnect()
 
         self._pending = self._pending if self._pending else {}
@@ -192,9 +186,7 @@ class MQTTRepo:
             try:
                 self._client.subscribe(topic)
             except Exception as e:
-                print('ERROR: exception occurred on subscribe "%s"' % (topic,))
-                # noinspection PyUnresolvedReferences
-                sys.print_exception(e)
+                log.error('exception occurred on subscribe "%s"' % (topic,), e)
                 self._disconnect()
 
     def _disconnect(self):
@@ -206,7 +198,7 @@ class MQTTRepo:
             except OSError:
                 pass
             self._client = None
-            print('disconnected from %s MQTT broker' % (self._server.get(),))
+            log.info('disconnected from %s MQTT broker' % (self._server.get(),))
 
     def subscribe(self, topic: str, cb: typ.Callable[[str, str], None]):
         topic = topic % {'id': self.get_active_client_id()}

@@ -1,3 +1,4 @@
+import log
 from microdot import Microdot, Response
 from wlan import Wlan
 from auth import Auth
@@ -33,7 +34,6 @@ except ImportError:
     import uasyncio as asyncio
 
 loop = asyncio.get_event_loop()
-# PrintToFile(loop=loop)
 
 app = Microdot()
 Response.default_content_type = 'application/json; charset=utf-8'
@@ -59,21 +59,22 @@ async def start_server():
             await app.start_server(port=80, debug=False)
             __starting = False
         except OSError as e:
-            print('ERROR: start server: ', e)
+            log.error('start server: ', e)
 
 
 def on_connect(has_internet: bool):
     if has_internet:
         loop.create_task(util.synchronize_time())
     loop.create_task(start_server())
-    print('server started')
+    log.info('server started')
 
 
 def on_disconnect():
     global __starting
     __starting = False
-    app.shutdown()
-    print('server stopped')
+    if app.server:
+        app.shutdown()
+        log.info('server stopped')
 
 
 config = Config(filename='config.json', loop=loop)
@@ -135,6 +136,6 @@ install_ui(app=app, auth=auth)
 def run():
     try:
         loop.run_forever()
-    except Exception as e:
-        print('ERROR: main loop stopped with: ', e)
+    except BaseException as e:
+        log.error('main loop stopped with', e)
         loop.stop()

@@ -2,6 +2,7 @@
 import ds18x20
 # noinspection PyUnresolvedReferences
 import onewire
+import log
 try:
     import typ
 except ImportError:
@@ -35,5 +36,5 @@ class TemperatureSensor:
             if len(self._temp_devices):
                 self._temp_sensor.convert_temp()  # convert temperature
                 return self._temp_sensor.read_temp(self._temp_devices[self._device_index])
-        except onewire.OneWireError:
-            print('failed to read temperature')
+        except onewire.OneWireError as e:
+            log.error('failed to read temperature', e)

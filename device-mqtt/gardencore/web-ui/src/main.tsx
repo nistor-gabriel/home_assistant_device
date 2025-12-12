@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Lightbulb, Wifi, Radio, Settings as SettingsIcon, FileSymlink } from 'lucide-react';
+import { Home, Lightbulb, Wifi, Radio, Settings as SettingsIcon, FileSymlink, Text as LogIcon } from 'lucide-react';
 import ReactDOM from 'react-dom/client'
 import Moment from 'react-moment';
 import { Toaster } from '@/components/ui/sonner';
@@ -16,6 +16,7 @@ import Settings from '@/pages/settings';
 import Switch from '@/pages/switch';
 import Dashboard from '@/pages/dashboard';
 import Fs from '@/pages/fs';
+import Log from '@/pages/log';
 import App, { MenuItem, DashboardItem } from '@/app.tsx';
 import '@/gardencore/lib';
 import '@/index.css';
@@ -38,6 +39,7 @@ const menuItems: MenuItem[] = [
   { id: 'mqtt', label: 'MQTT Connection', icon: Radio, node: <MQTT key="mqtt" /> },
   { id: 'settings', label: 'Settings', icon: SettingsIcon, node: <Settings key="settings" /> },
   { id: 'fs', label: 'File System', icon: FileSymlink, node: <Fs key="fs" /> },
+  { id: 'log', label: 'Log', icon: LogIcon, node: <Log key="log" /> },
 ];
 
 /* ========================================================================== */

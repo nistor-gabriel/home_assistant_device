@@ -5,6 +5,7 @@ from mqtt_repo import MQTTRepo
 from device import Device
 import util
 import time
+import log
 try:
     import asyncio
 except ImportError:
@@ -51,7 +52,7 @@ def install_switches(app: Microdot, auth: Auth, mqtt: MQTTRepo, device: Device, 
                 stop['timeout'] = int(msg)
                 stop['timeoutReceived'] = True
             except ValueError as e:
-                print('ERROR: invalid stop timeout number received', msg, e)
+                log.error('invalid stop timeout number received: %s' % (msg,), e)
 
         def cb_timeout_enabled(_topic: str, msg: str):
             stop['enabled'] = msg == 'ON'

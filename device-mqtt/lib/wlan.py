@@ -3,6 +3,7 @@ import network
 import util
 from config import Config, ConfigEntry
 import socket
+import log
 
 try:
     import typ
@@ -63,10 +64,10 @@ class Wlan:
 
     def connect(self, ssid: str, password: str):
         if not util.is_str(ssid, min_len=1, max_len=32):
-            print('ERROR: invalid ssid')
+            log.error('invalid ssid')
             return {'ssid': 'invalid'}
         if not util.is_str(password, min_len=3, max_len=50):
-            print('ERROR: invalid password')
+            log.error('invalid password')
             return {'password': 'invalid'}
 
         self._conn = True
@@ -123,13 +124,13 @@ class Wlan:
                     if self.wlan.isconnected():
                         break
                 if not self.wlan.isconnected():
-                    print('failed to connect on', self._conn_ssid if self._conn else self._ssid.get())
+                    log.info('failed to connect on %s' % (self._conn_ssid if self._conn else self._ssid.get(),))
                     if self._conn:
                         self._conn = False
                         self._conn_ssid = self._conn_pass = None
                     continue
                 self._ifconfig = self.wlan.ifconfig()
-                print('connected on IP:', self._ifconfig[0])
+                log.info('connected on IP %s' % (self._ifconfig[0],))
                 if self._conn:
                     self._conn = False
                     self._ssid.set(self._conn_ssid)
@@ -144,17 +145,29 @@ class Wlan:
                 reconnect = False
                 while True:
                     # print('DEBUG: wlan pinging')
-                    try:
-                        sent, recv = ping(self.get_gateway(), count=1)
-                        if sent != recv:
-                            print('cannot ping the gateway')
-                            reconnect = sent != recv
-                    except OSError as e:
-                        print('error on pinging the gateway', e)
+                    if not self.wlan.isconnected():
+                        log.info('WiFi disconnected')
                         reconnect = True
+                    else:
+                        try:
+                            rssi = self.wlan.status('rssi')
+                            if rssi < -85:
+                                log.info('weak signal (RSSI: %s), reconnecting' % (rssi,))
+                                reconnect = True
+                        except:
+                            reconnect = True
+
+                    # try:
+                    #     sent, recv = ping(self.get_gateway(), count=1)
+                    #     if sent != recv:
+                    #         log.info('cannot ping the gateway')
+                    #         reconnect = sent != recv
+                    # except OSError as e:
+                    #     log.error('error on pinging the gateway', e)
+                    #     reconnect = True
 
                     if self._conn or reconnect or not self.is_wifi_available():
-                        print('connecting to the wifi')
+                        log.info('connecting to the wifi')
                         self.wlan.disconnect()
                         self.wlan.active(False)
                         self.wlan = None
@@ -171,7 +184,7 @@ class Wlan:
                 self.wlan.active(True)
                 self.wlan.config(ssid=self._name.get(), password='sigma2000',
                                  security=network.WLAN.SEC_WPA_WPA2)
-                print('connected on AP:', self.wlan.ifconfig()[0])
+                log.info('connected on AP: %s' % (self.wlan.ifconfig()[0],))
                 self._on_connect(False)
 
                 ip = self.wlan.ifconfig()[0]
@@ -223,90 +236,90 @@ class DNSQuery:
         return packet
 
 
-def checksum(data):
-    if len(data) & 0x1:
-        data += b'\0'
-    cs = 0
-    for pos in range(0, len(data), 2):
-        b1 = data[pos]
-        b2 = data[pos + 1]
-        cs += (b1 << 8) + b2
-    while cs >= 0x10000:
-        cs = (cs & 0xffff) + (cs >> 16)
-    cs = ~cs & 0xffff
-    return cs
-
-
-# noinspection PyUnresolvedReferences
-def ping(host, count=4, timeout=5000, interval=10, size=64):
-    import utime
-    import uselect
-    import uctypes
-    import urandom
-
-    pkt = b'Q'*size
-    pkt_desc = {
-        "type": uctypes.UINT8 | 0,
-        "code": uctypes.UINT8 | 1,
-        "checksum": uctypes.UINT16 | 2,
-        "id": uctypes.UINT16 | 4,
-        "seq": uctypes.INT16 | 6,
-        "timestamp": uctypes.UINT64 | 8,
-    }
-    h = uctypes.struct(uctypes.addressof(pkt), pkt_desc, uctypes.BIG_ENDIAN)
-    h.type = 8
-    h.code = 0
-    h.checksum = 0
-    h.id = urandom.getrandbits(16)
-    h.seq = 1
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, 1)
-    sock.setblocking(False)
-    sock.settimeout(timeout/1000)
-    addr = socket.getaddrinfo(host, 1)[0][-1][0]
-    sock.connect((addr, 1))
-
-    seqs = list(range(1, count+1))
-    c = 1
-    t = 0
-    n_trans = 0
-    n_recv = 0
-    finish = False
-    while t < timeout:
-        if t == interval and c <= count:
-            h.checksum = 0
-            h.seq = c
-            h.timestamp = utime.ticks_us()
-            h.checksum = checksum(pkt)
-            if sock.send(pkt) == size:
-                n_trans += 1
-                t = 0
-            else:
-                seqs.remove(c)
-            c += 1
-
-        # recv packet
-        while 1:
-            socks, _, _ = uselect.select([sock], [], [], 0)
-            if socks:
-                resp = socks[0].recv(4096)
-                resp_mv = memoryview(resp)
-                h2 = uctypes.struct(uctypes.addressof(resp_mv[20:]), pkt_desc, uctypes.BIG_ENDIAN)
-                seq = h2.seq
-                if h2.type == 0 and h2.id == h.id and (seq in seqs):
-                    n_recv += 1
-                    seqs.remove(seq)
-                    if len(seqs) == 0:
-                        finish = True
-                        break
-            else:
-                break
-
-        if finish:
-            break
-
-        utime.sleep_ms(1)
-        t += 1
-
-    sock.close()
-    return n_trans, n_recv
+# def checksum(data):
+#     if len(data) & 0x1:
+#         data += b'\0'
+#     cs = 0
+#     for pos in range(0, len(data), 2):
+#         b1 = data[pos]
+#         b2 = data[pos + 1]
+#         cs += (b1 << 8) + b2
+#     while cs >= 0x10000:
+#         cs = (cs & 0xffff) + (cs >> 16)
+#     cs = ~cs & 0xffff
+#     return cs
+#
+#
+# # noinspection PyUnresolvedReferences
+# def ping(host, count=4, timeout=5000, interval=10, size=64):
+#     import utime
+#     import uselect
+#     import uctypes
+#     import urandom
+#
+#     pkt = b'Q'*size
+#     pkt_desc = {
+#         "type": uctypes.UINT8 | 0,
+#         "code": uctypes.UINT8 | 1,
+#         "checksum": uctypes.UINT16 | 2,
+#         "id": uctypes.UINT16 | 4,
+#         "seq": uctypes.INT16 | 6,
+#         "timestamp": uctypes.UINT64 | 8,
+#     }
+#     h = uctypes.struct(uctypes.addressof(pkt), pkt_desc, uctypes.BIG_ENDIAN)
+#     h.type = 8
+#     h.code = 0
+#     h.checksum = 0
+#     h.id = urandom.getrandbits(16)
+#     h.seq = 1
+#
+#     sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, 1)
+#     sock.setblocking(False)
+#     sock.settimeout(timeout/1000)
+#     addr = socket.getaddrinfo(host, 1)[0][-1][0]
+#     sock.connect((addr, 1))
+#
+#     seqs = list(range(1, count+1))
+#     c = 1
+#     t = 0
+#     n_trans = 0
+#     n_recv = 0
+#     finish = False
+#     while t < timeout:
+#         if t == interval and c <= count:
+#             h.checksum = 0
+#             h.seq = c
+#             h.timestamp = utime.ticks_us()
+#             h.checksum = checksum(pkt)
+#             if sock.send(pkt) == size:
+#                 n_trans += 1
+#                 t = 0
+#             else:
+#                 seqs.remove(c)
+#             c += 1
+#
+#         # recv packet
+#         while 1:
+#             socks, _, _ = uselect.select([sock], [], [], 0)
+#             if socks:
+#                 resp = socks[0].recv(4096)
+#                 resp_mv = memoryview(resp)
+#                 h2 = uctypes.struct(uctypes.addressof(resp_mv[20:]), pkt_desc, uctypes.BIG_ENDIAN)
+#                 seq = h2.seq
+#                 if h2.type == 0 and h2.id == h.id and (seq in seqs):
+#                     n_recv += 1
+#                     seqs.remove(seq)
+#                     if len(seqs) == 0:
+#                         finish = True
+#                         break
+#             else:
+#                 break
+#
+#         if finish:
+#             break
+#
+#         utime.sleep_ms(1)
+#         t += 1
+#
+#     sock.close()
+#     return n_trans, n_recv

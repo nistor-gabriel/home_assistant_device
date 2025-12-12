@@ -50,6 +50,13 @@ def install_api(app: Microdot, auth: Auth, device: Device):
                 return {'reset': 'invalid'}, 400
             if is_reset is True:
                 device.reset()
+        is_publish = util.get_body_bool(request.json, 'publish')
+        if is_publish is not None:
+            if is_publish is util.INVALID:
+                return {'publish': 'invalid'}, 400
+            if is_publish is True:
+                if not device.publish():
+                    return {'publish': 'invalid'}, 404
 
     @app.delete('/api')
     @auth.with_auth

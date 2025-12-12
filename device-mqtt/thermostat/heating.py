@@ -1,5 +1,6 @@
 from config import Config
 import util
+import log
 
 try:
     from event import EventManager
@@ -78,14 +79,14 @@ class Heating:
 
     def set_pump_cycle_period(self, seconds: float):
         if seconds < 24 * 3600:  # Minimum time will be a day
-            print('ERROR: cycle period needs to be more then a day')
+            log.error('cycle period needs to be more then a day')
             return False
         self._pump_cycle_period.set(seconds)
         return True
 
     def set_pump_period(self, seconds: float):
         if seconds < 10:
-            print('ERROR: pump period needs to be more then 10 seconds')
+            log.error('pump period needs to be more then 10 seconds')
             return False
         self._pump_period.set(seconds)
         return True
@@ -111,7 +112,7 @@ class Heating:
         if self._is_stop_offset:
             return False
         if self._is_heat_on:
-            print('stopping heating')
+            log.info('stopping heating')
             self._stop_heat()
         else:
             self._is_start_offset = False
@@ -123,7 +124,7 @@ class Heating:
             return False
         if self._is_start_offset:
             return False
-        print('starting heating')
+        log.info('starting heating')
 
         self._stop_time = timeout
         self._is_auto_stop = is_auto_stop
@@ -144,7 +145,7 @@ class Heating:
             self._listeners.notify('pumpOnAuto')
         else:
             self._listeners.notify('pumpOn')
-        print('started pump')
+        log.info('started pump')
 
     def _start_maintenance(self):
         self._is_auto_stop_pump = True
@@ -162,7 +163,7 @@ class Heating:
         self._on_since = None
         self._stop_time = 0
         self._listeners.notify('pumpOff')
-        print('stopped pump')
+        log.info('stopped pump')
 
     def _start_heat(self):
         if self._is_heat_on:
@@ -170,7 +171,7 @@ class Heating:
         self._is_heat_on = True
         self._pin_heat.low()
         self._listeners.notify('heatOn')
-        print('started heat')
+        log.info('started heat')
 
     def _stop_heat(self):
         if not self._is_heat_on:
@@ -180,7 +181,7 @@ class Heating:
         self._on_since = util.time()
         self._pin_heat.high()
         self._listeners.notify('heatOff')
-        print('stopped heat')
+        log.info('stopped heat')
 
     async def _run(self):
         await asyncio.sleep(20)  # wait 20 seconds so the time can be synchronized

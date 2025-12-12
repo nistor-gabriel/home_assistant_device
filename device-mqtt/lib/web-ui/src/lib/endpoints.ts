@@ -67,6 +67,7 @@ export const PATH_WLAN = '/wlan';
 export const PATH_MQTT = '/mqtt';
 export const PATH_FS = '/fs';
 export const PATH_SWITCH = '/switch';
+export const PATH_LOG = '/fs/log.txt';
 
 export function pathSwitchItem(sw: SwitchItem) {
     return PATH_SWITCH + '/' + sw.id;

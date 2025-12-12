@@ -1,5 +1,6 @@
 import json
 import os
+import log
 try:
     import typ
 
@@ -39,7 +40,7 @@ class Config:
             cnt = json.load(f)
             f.close()
         except OSError:
-            print('no config file available')
+            log.info('no config file available')
 
         if cnt:
             for key in self._entries.keys():
@@ -62,7 +63,7 @@ class Config:
                 # noinspection PyTypeChecker
                 json.dump({key: self._entries[key].get() for key in self._entries}, f, separators=(',', ':'))
                 f.close()
-                print('config file saved')
+                log.info('config file saved')
             await asyncio.sleep(self._interval_save)
 
 

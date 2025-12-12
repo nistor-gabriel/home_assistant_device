@@ -4,6 +4,7 @@ from microdot import Microdot, Request
 from mqtt_repo import MQTTRepo
 from device import Device
 import util
+import log
 
 try:
     import typ
@@ -42,7 +43,7 @@ def install_wlan(app: Microdot, auth: Auth, wlan: Wlan, mqtt: MQTTRepo, device: 
                     gateway=wlan.get_gateway(),
                 )
             except Exception as e:
-                print('ERROR: failed to process wlan route', e)
+                log.error('failed to process wlan route', e)
             mqtt.put_obj('device/%(id)s/wlan', data)
             try:
                 await asyncio.wait_for(event.wait(), timeout=interval_refresh)

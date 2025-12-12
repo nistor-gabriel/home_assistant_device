@@ -1,5 +1,5 @@
+import log
 import util
-import time
 from config import Config
 try:
     import typ
@@ -53,7 +53,7 @@ class Switch:
 
     def set_name(self, name: str):
         if not util.is_str(name, min_len=3, max_len=50):
-            print('ERROR: invalid relay name')
+            log.error('invalid relay name')
             return False
         self._name.set(name)
         return True
@@ -138,8 +138,10 @@ class Switch:
                 await asyncio.sleep(1)
 
             elif self._is_on and self._stop_time:
-                ctime = time.time()
+                ctime = util.time()
                 stop_time = self._on_since + self._stop_time
+                # print('DEBUG: stop time = ', stop_time, ' current = ', ctime, ' _stop_time = ', self._stop_time,
+                #       ' _on_since = ', self._on_since, ' sleep = ', stop_time - ctime)
                 if stop_time <= ctime:
                     self.off()
                 else:

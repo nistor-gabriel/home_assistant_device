@@ -9,6 +9,7 @@ import asyncio
 import io
 import json
 import time
+import log
 
 try:
     from inspect import iscoroutinefunction, iscoroutine
@@ -39,14 +40,6 @@ except ImportError:  # pragma: no cover
         if iscoroutine(ret):
             ret = await ret
         return ret
-
-try:
-    from sys import print_exception
-except ImportError:  # pragma: no cover
-    import traceback
-
-    def print_exception(exc):
-        traceback.print_exc()
 
 MUTED_SOCKET_ERRORS = [
     32,  # Broken pipe
@@ -1228,7 +1221,7 @@ class Microdot:
             await self.handle_request(reader, writer)
 
         if self.debug:  # pragma: no cover
-            print('Starting async server on {host}:{port}...'.format(
+            log.info('Starting async server on {host}:{port}...'.format(
                 host=host, port=port))
 
         try:
@@ -1333,7 +1326,7 @@ class Microdot:
             req = await Request.create(self, reader, writer,
                                        writer.get_extra_info('peername'))
         except Exception as exc:  # pragma: no cover
-            print_exception(exc)
+            log.error('exception occurred on handling request', exc)
 
         res = await self.dispatch_request(req)
         if res != Response.already_handled:  # pragma: no branch
@@ -1346,7 +1339,7 @@ class Microdot:
             else:
                 raise
         if self.debug and req:  # pragma: no cover
-            print('{method} {path} {status_code}'.format(
+            log.info('{method} {path} {status_code}'.format(
                 method=req.method, path=req.path,
                 status_code=res.status_code))
 
@@ -1405,7 +1398,7 @@ class Microdot:
                     else:
                         res = exc.reason, exc.status_code
                 except Exception as exc:
-                    print_exception(exc)
+                    log.error('exception occurred on dispatching request %s' % (req.path,), exc)
                     exc_class = None
                     res = None
                     if exc.__class__ in self.error_handlers:
@@ -1420,7 +1413,7 @@ class Microdot:
                             res = await invoke_handler(
                                 self.error_handlers[exc_class], req, exc)
                         except Exception as exc2:  # pragma: no cover
-                            print_exception(exc2)
+                            log.error('exception occurred on handling request %s' % (req.path,), exc2)
                     if res is None:
                         if 500 in self.error_handlers:
                             res = await invoke_handler(

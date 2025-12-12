@@ -37,7 +37,7 @@ const Settings: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isProcessing, setProcessing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [showDialog, setShowDialog] = useState<'confirm-reset' | 'confirm-reboot' | 'failed-reset' | 'done-reset' | false>(false);
+  const [showDialog, setShowDialog] = useState<'confirm-reset' | 'confirm-reboot' | 'confirm-publish' | 'failed-reset' | 'done-reset' | false>(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -112,19 +112,36 @@ const Settings: React.FC = () => {
     }
   };
 
+  const confirmPublish = async () => {
+    setShowDialog(false);
+    setProcessing(true);
+    const result = await doModify('POST', ep.PATH_API, { publish: true });
+    setProcessing(false);
+    if (result === 'ok') {
+      toast((
+        <AlertUpdateSuccess title="Success">
+          <p>Successfuly registered with home assistant the device.</p>
+        </AlertUpdateSuccess>
+      ));
+    } else {
+      toast((
+        <AlertUpdateFailed title="Failed to Register"/>
+      ));
+    }
+  };
+
   const confirmReboot = async () => {
     setShowDialog(false);
     setProcessing(true);
     const result = await doDelete(ep.PATH_API);
-    if (result === 'ok') {
       setProcessing(false);
+    if (result === 'ok') {
       toast((
         <AlertUpdateSuccess title="Success">
           <p>Successfuly rebooted the device.</p>
         </AlertUpdateSuccess>
       ));
     } else {
-      setProcessing(false);
       toast((
         <AlertUpdateFailed title="Failed to Reboot"/>
       ));
@@ -186,6 +203,12 @@ const Settings: React.FC = () => {
                   <div className="w-full"></div>
                   <Button disabled={isLoading} type="submit" variant="secondary" onClick={(event) => {
                     event.preventDefault();
+                    setShowDialog('confirm-publish');
+                  }}>
+                    Register With Home Assistant
+                  </Button>
+                  <Button disabled={isLoading} type="submit" variant="secondary" onClick={(event) => {
+                    event.preventDefault();
                     setShowDialog('confirm-reboot');
                   }}>
                     Reboot
@@ -210,6 +233,8 @@ const Settings: React.FC = () => {
               <AlertDialogTitle>Reset Device!</AlertDialogTitle>
             ) : showDialog === 'confirm-reboot' ? (
               <AlertDialogTitle>Reboot Device!</AlertDialogTitle>
+            ) : showDialog === 'confirm-publish' ? (
+              <AlertDialogTitle>Register Device with Home Assistant!</AlertDialogTitle>
             ) : showDialog === 'failed-reset' ? (
               <AlertDialogTitle>Failed!</AlertDialogTitle>
             ) : showDialog === 'done-reset' ? (
@@ -240,16 +265,20 @@ const Settings: React.FC = () => {
             ) : null}
           </AlertDialogHeader>
 
-          {showDialog === 'confirm-reset' || showDialog === 'confirm-reboot' ? (
+          {showDialog === 'confirm-reset' || showDialog === 'confirm-reboot' || showDialog === 'confirm-publish' ? (
             <AlertDialogFooter>
               <AlertDialogCancel onClick={cancel}>Cancel</AlertDialogCancel>
               {showDialog === 'confirm-reset' ? (
                 <AlertDialogAction onClick={confirmReset} className="bg-red-600 hover:bg-red-700">
                   Reset
                 </AlertDialogAction>
-              ) : (
+              ) : showDialog === 'confirm-reboot' ? (
                 <AlertDialogAction onClick={confirmReboot} className="bg-red-600 hover:bg-red-700">
                   Reboot
+                </AlertDialogAction>
+              ) : (
+                <AlertDialogAction onClick={confirmPublish} className="bg-red-600 hover:bg-red-700">
+                  Register
                 </AlertDialogAction>
               )}
             </AlertDialogFooter>
