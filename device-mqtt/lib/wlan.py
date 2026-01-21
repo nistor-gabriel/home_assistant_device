@@ -73,6 +73,7 @@ class Wlan:
         self._conn = True
         self._conn_ssid = ssid
         self._conn_pass = password
+        log.info('started connecting on %s' % (ssid,))
 
         return True
 
@@ -109,6 +110,7 @@ class Wlan:
                 if self._conn:
                     ssid = self._conn_ssid
                     password = self._conn_pass
+                    log.info('connecting on %s' % (ssid,))
                 else:
                     ssid = self._ssid.get()
                     password = self._pass.get()
@@ -123,6 +125,7 @@ class Wlan:
                     await asyncio.sleep(0.3)
                     if self.wlan.isconnected():
                         break
+                await asyncio.sleep(3)
                 if not self.wlan.isconnected():
                     log.info('failed to connect on %s' % (self._conn_ssid if self._conn else self._ssid.get(),))
                     if self._conn:

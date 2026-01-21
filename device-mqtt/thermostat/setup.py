@@ -17,6 +17,7 @@ from route_mqtt import install_mqtt
 from route_stats import install_stats
 from route_thermostat import install_thermostat
 from route_ui import install_ui
+from route_log import install_log
 import util
 
 try:
@@ -78,6 +79,7 @@ def on_disconnect():
 
 
 config = Config(filename='config.json', loop=loop)
+logger = log.logger = log.LoggerFile(config=config, log_to_file=True, max_file_size=5 * 4096)
 name = config.create('name', 'Thermostat')
 wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
@@ -122,6 +124,7 @@ heating.setup()
 controller.setup()
 # watchdog.setup()
 
+install_log(app=app, auth=auth, logger=logger)
 install_mqtt(app=app, auth=auth, mqtt=mqtt)
 install_api(app=app, auth=auth, device=device)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)

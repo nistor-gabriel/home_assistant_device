@@ -55,6 +55,7 @@ const MQTT: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isProcessing, setProcessing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const [clientIdPlaceholder, setClientIdPlaceholder] = useState<string>('');
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -85,6 +86,7 @@ const MQTT: React.FC = () => {
       });
       setClientIdPlaceholder('auto-generated<' + data.defaultClientId + '>');
       setIsLoading(false);
+      setIsDisabled(data.disabled);
     }
   }, 'refresh');
 
@@ -112,6 +114,26 @@ const MQTT: React.FC = () => {
     }
   };
 
+  const handleDisableEnable = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    const timeout = setTimeout(() => setProcessing(true), 300);
+    const result = await doModify('PUT', ep.PATH_MQTT, { disabled: !isDisabled });
+    clearTimeout(timeout);
+    setProcessing(false);
+
+
+    if (result === 'ok') {
+      toast((
+        <AlertUpdateSuccess>
+          <p>Successfuly disabled the MQTT.</p>
+        </AlertUpdateSuccess>
+      ));
+      refresh();
+    } else {
+      toast((<AlertUpdateFailed />));
+    }
+  };
+
   return (
     <>
       <div className="space-y-6">
@@ -127,7 +149,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Broker Host</FormLabel>
                         <FormControl>
-                          <Input disabled={isLoading} placeholder="mqtt.example.com" {...field} />
+                          <Input disabled={isLoading || isDisabled} placeholder="mqtt.example.com" {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -141,7 +163,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Port</FormLabel>
                         <FormControl>
-                          <Input disabled={isLoading} type="number" placeholder="using default port" {...field} />
+                          <Input disabled={isLoading || isDisabled} type="number" placeholder="using default port" {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -155,7 +177,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Username</FormLabel>
                         <FormControl>
-                          <Input disabled={isLoading} placeholder="enter username" {...field} />
+                          <Input disabled={isLoading || isDisabled} placeholder="enter username" {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -169,7 +191,7 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Client ID</FormLabel>
                         <FormControl>
-                          <Input disabled={isLoading} placeholder={clientIdPlaceholder} {...field} />
+                          <Input disabled={isLoading || isDisabled} placeholder={clientIdPlaceholder} {...field} />
                         </FormControl>
                         <FormMessage className="text-xs">&nbsp;</FormMessage>
                       </FormItem>
@@ -183,12 +205,12 @@ const MQTT: React.FC = () => {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input disabled={isLoading} type={showPassword ? 'text' : 'password'} placeholder="enter password" {...field} />
+                          <Input disabled={isLoading || isDisabled} type={showPassword ? 'text' : 'password'} placeholder="enter password" {...field} />
                         </FormControl>
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="showPassword"
-                            disabled={isLoading}
+                            disabled={isLoading || isDisabled}
                             checked={showPassword}
                             onCheckedChange={(checked) => setShowPassword(!!checked)}
                           />
@@ -211,7 +233,7 @@ const MQTT: React.FC = () => {
                         </div>
                         <FormControl>
                           <Checkbox
-                            disabled={isLoading}
+                            disabled={isLoading || isDisabled}
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
@@ -224,6 +246,9 @@ const MQTT: React.FC = () => {
                 <div className="flex space-x-3">
                   <Button type="submit" disabled={!form.formState.isDirty}>
                     Update Connection
+                  </Button>
+                   <Button onClick={handleDisableEnable}>
+                    {isDisabled ? 'Enable' : 'Disable'}
                   </Button>
                 </div>
               </form>

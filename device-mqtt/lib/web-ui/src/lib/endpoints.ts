@@ -1,5 +1,10 @@
 /* ========================================================================== */
 
+export interface Log { 
+    logToFile: boolean; 
+    maxFileSize: number;
+}
+
 export interface Api { 
     name: string; 
     type: string; 
@@ -31,7 +36,8 @@ export interface Mqtt {
     ssl: boolean; 
     clientId: string;
     defaultClientId: string;
-    isConnected: boolean; 
+    isConnected: boolean;
+    disabled: boolean;
 }
 
 export interface FsItem {
@@ -67,7 +73,9 @@ export const PATH_WLAN = '/wlan';
 export const PATH_MQTT = '/mqtt';
 export const PATH_FS = '/fs';
 export const PATH_SWITCH = '/switch';
-export const PATH_LOG = '/fs/log.txt';
+export const PATH_LOG = '/log';
+export const PATH_LOG_FILE_1 = '/fs/log.1.txt';
+export const PATH_LOG_FILE_2 = '/fs/log.2.txt';
 
 export function pathSwitchItem(sw: SwitchItem) {
     return PATH_SWITCH + '/' + sw.id;

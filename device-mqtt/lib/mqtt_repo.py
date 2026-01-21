@@ -28,7 +28,7 @@ from wlan import Wlan
 
 class MQTTRepo:
 
-    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 0.1,
+    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 10,
                  interval_mqtt_reconnect: float = 5, interval_mqtt_keepalive: float = 60):
         self._wlan = wlan
         self._loop = loop
@@ -40,6 +40,7 @@ class MQTTRepo:
         self._pass = config.create('mqtt_pass', '')
         self._ssl = config.create('mqtt_ssl', False)
         self._client_id = config.create('mqtt_client_id', '')
+        self._disabled = config.create('mqtt_disabled', False)
         self._default_client_id = ubinascii.hexlify(machine.unique_id()).decode()
         self._client: typ.Union[None, MQTTClient] = None
         self._is_connecting: bool = False
@@ -69,6 +70,16 @@ class MQTTRepo:
         if not active_id:
             active_id = self._default_client_id
         return active_id
+
+    def is_disabled(self):
+        return self._disabled.get()
+
+    def set_disabled(self, disabled: bool):
+        if self._disabled.get() == disabled:
+            return
+        self._disabled.set(disabled)
+        if disabled:
+            self._disconnect()
 
     def is_connected(self):
         return bool(self._client)
@@ -110,7 +121,7 @@ class MQTTRepo:
         # last_ping = util.uptime()
         count = 0
         while True:
-            if self._wlan.wlan and self._wlan.wlan.isconnected():
+            if self._wlan.wlan and self._wlan.wlan.isconnected() and not self._disabled.get():
                 if not self._client and self._server.get():
                     try:
                         client = MQTTClient(self.get_active_client_id().encode(), self._server.get(),
@@ -174,7 +185,7 @@ class MQTTRepo:
                     self._lazy[topic] = msg
                 return True
             except Exception as e:
-                log.error('exception occurred on publish "%s": "%s"' % (topic, msg), e)
+                log.error('exception occurred on publish "%s": %s' % (topic, msg), e)
                 self._disconnect()
 
         self._pending = self._pending if self._pending else {}

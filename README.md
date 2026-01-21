@@ -29,3 +29,6 @@ $ pip3 install adafruit-ampy
 Install micropython compiler
 $ pip3 install mpy-cross
 $ deactivate
+
+Enable ssh:
+$ eval "$(ssh-agent -s)"

@@ -23,9 +23,9 @@ const DashboardMqtt: React.FC = () => {
             <CardContent>
                 <div className="space-y-2">
                     {isOk ? (
-                        <p className={cn('text-sm mt-2 mb-1', rsp.data?.isConnected ? 'text-gray-600' : 'text-red-400')}>
+                        <p className={cn('text-sm mt-2 mb-1', rsp.data?.isConnected ? 'text-gray-600' : rsp.data?.disabled ?  'text-gray-400' : 'text-red-400')}>
                             {rsp.data?.server ? (
-                                <>{rsp.data?.isConnected ? 'Connected to' : 'Cannot connect to'} <b>{rsp.data?.server}</b></>
+                                <>{rsp.data?.isConnected ? 'Connected to' : rsp.data?.disabled ? 'Disabled connection to' : 'Cannot connect to'} <b>{rsp.data?.server}</b></>
                             ) : 'No server configured'}
                         </p>
                     ) : isError ? null : (

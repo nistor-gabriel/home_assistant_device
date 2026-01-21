@@ -2,7 +2,7 @@ from microdot import Microdot, Response
 from wlan import Wlan
 from auth import Auth
 from config import Config
-from watchdog import WatchDog
+# from watchdog import WatchDog
 from device import Device
 from mqtt_repo import MQTTRepo
 from switch import Switch
@@ -13,6 +13,7 @@ from route_api import install_api
 from route_wlan import install_wlan
 from route_ui import install_ui
 from route_switch import install_switches
+from route_log import install_log
 import util
 import log
 
@@ -30,8 +31,8 @@ util.set_timezone(
     name='Europe/Bucharest',
     std_offset=2 * 3600,  # UTC+2
     dst_offset=3 * 3600,  # UTC+3
-    dst_start=lambda y: (util.last_sunday(y, 3), 3, 0),   # Last Sunday of March, 03:00
-    dst_end=lambda y: (util.last_sunday(y, 10), 4, 0),    # Last Sunday of October, 04:00
+    dst_start=lambda y: (util.last_sunday(y, 3), 3, 0),  # Last Sunday of March, 03:00
+    dst_end=lambda y: (util.last_sunday(y, 10), 4, 0),  # Last Sunday of October, 04:00
 )
 
 __starting: bool = False
@@ -65,12 +66,14 @@ def on_disconnect():
 
 
 config = Config(filename='config.json', loop=loop)
+logger = log.logger = log.LoggerFile(config=config, log_to_file=True, max_file_size=10 * 4096)
+
 name = config.create('name', 'Sprinkler 2')
 wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
 mqtt = MQTTRepo(config=config, wlan=wlan, loop=loop)
 device = Device(config=config, mqtt=mqtt, wlan=wlan, loop=loop, name=name, api_type='sprinkler', version='3.0')
-watchdog = WatchDog(loop=loop)
+# watchdog = WatchDog(loop=loop)
 
 switches = [
     Switch(pin=28, id_=1, config=config, loop=loop),
@@ -85,9 +88,10 @@ auth.setup()
 mqtt.setup()
 wlan.setup()
 device.setup()
-watchdog.setup()
+# watchdog.setup()
 [switch.setup() for switch in switches]
 
+install_log(app=app, auth=auth, logger=logger)
 install_mqtt(app=app, auth=auth, mqtt=mqtt)
 install_api(app=app, auth=auth, device=device)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
