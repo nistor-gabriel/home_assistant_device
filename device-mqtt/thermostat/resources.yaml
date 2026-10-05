@@ -79,5 +79,7 @@
   ignore: Yes
 - dst: temperature.json
   ignore: Yes
-- dst: log.txt
+- dst: log.1.txt
+  ignore: Yes
+- dst: log.2.txt
   ignore: Yes

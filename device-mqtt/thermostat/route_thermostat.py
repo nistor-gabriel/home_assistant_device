@@ -66,12 +66,14 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
             mqtt.put(path_thermostat, 'off')
             publish_stats()
         elif event == 'mode':
+            # log.info('DEBUG: publishing listener mode %s' % (controller.get_mode(),))
             mqtt.put(path_mode, controller.get_mode())
         elif event == 'temperatureTarget':
             mqtt.put(path_temperature_target, str(controller.get_target_temp()))
 
     def cb_mode(_topic: str, msg: str):
         controller.set_mode(msg)
+        # log.info('DEBUG: publishing call back set mode %s' % (controller.get_mode(),))
         mqtt.put(path_mode, controller.get_mode())
 
     def cb_temperature_manual(_topic: str, msg: str):
@@ -100,6 +102,7 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
 
     mqtt.put(path_temperature_manual, str(controller.get_temp_manual()))
     mqtt.put(path_thermostat, 'off')
+    # log.info('DEBUG: publishing initial mode %s' % (controller.get_mode(),))
     mqtt.put(path_mode, controller.get_mode())
     mqtt.put(path_heat, 'off')
     mqtt.put(path_pump, 'off')
@@ -168,6 +171,7 @@ def install_thermostat(app: Microdot, auth: Auth, heating: Heating, controller: 
             if mode is util.INVALID or not controller.set_mode(mode):
                 return {'mode': 'invalid'}, 400
         else:
+            # log.info('DEBUG: publishing put mode %s' % (controller.get_mode(),))
             mqtt.put(path_mode, controller.get_mode())
 
     @app.put('/thermostat/config')

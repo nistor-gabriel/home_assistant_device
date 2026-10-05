@@ -27,10 +27,15 @@ except ImportError:
 class Switch:
 
     def __init__(self, pin: int, id_: int, config: Config, loop: asyncio.AbstractEventLoop,
-                 blinker: Blinker | None = None, trigger: Trigger | None = None):
+                 blinker: Blinker | None = None, trigger: Trigger | None = None,
+                 name_source: typ.Callable[[], str] | None = None):
         self._listeners = util.Listeners()
         self._id = id_
-        self._name = config.create('switch_' + str(id_) + '_name', 'Switch ' + str(id_))
+        self._name_source = name_source
+        if name_source is None:
+            self._name = config.create('switch_' + str(id_) + '_name', 'Switch ' + str(id_))
+        else:
+            self._name = None
         self._disabled = config.create('switch_' + str(id_) + '_disabled', False)
         self._disabled_blinker_time = 0
         self._loop = loop
@@ -49,14 +54,21 @@ class Switch:
         return self._id
 
     def get_name(self):
+        if self._name_source:
+            return self._name_source()
         return self._name.get()
 
     def set_name(self, name: str):
+        if self._name is None:
+            return False
         if not util.is_str(name, min_len=3, max_len=50):
             log.error('invalid relay name')
             return False
         self._name.set(name)
         return True
+
+    def is_name_managed(self):
+        return self._name_source is not None
 
     def is_disabled(self):
         return self._disabled.get()

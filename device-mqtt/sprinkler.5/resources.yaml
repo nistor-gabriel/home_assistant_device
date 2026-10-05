@@ -11,8 +11,8 @@
   src: ../lib/wlan.py
 - dst: auth.py
   src: ../lib/auth.py
-- dst: watchdog.py
-  src: ../lib/watchdog.py
+#- dst: watchdog.py
+#  src: ../lib/watchdog.py
 
 - dst: mqtt_repo.py
   src: ../lib/mqtt_repo.py
@@ -26,6 +26,8 @@
   src: ../lib/main.py
   type: raw
 
+- dst: route_log.py
+  src: ../lib/route_log.py
 - dst: route_api.py
   src: ../lib/route_api.py
 - dst: route_stats.py

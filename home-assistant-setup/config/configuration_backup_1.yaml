@@ -12,58 +12,49 @@ scene: !include scenes.yaml
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 
-template:
-  - sensor:
-      - name: Putere Incarcare Baterie
+sensor:
+  - platform: template
+    sensors:
+      power_in_battery:
+        friendly_name: Putere Incarcare Baterie
         unique_id: power_in_battery
         unit_of_measurement: W
         device_class: power
-        state_class: measurement
-        state: >-
-          {% set power = states('sensor.victron_system_battery_power') | int(0) %}
-          {{ power if power > 0 else 0 }}
-
-      - name: Putere Descarcare Baterie
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_battery_power')) %}
+          {% if power > 0 %} {{ power }}
+          {% else %} {{ 0 }}
+          {% endif %}
+      power_out_battery:
+        friendly_name: Putere Descarcare Baterie
         unique_id: power_out_battery
         unit_of_measurement: W
         device_class: power
-        state_class: measurement
-        state: >-
-          {% set power = states('sensor.victron_system_battery_power') | int(0) %}
-          {{ power | abs if power < 0 else 0 }}
-
-      - name: Putere In Retea
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_battery_power')) %}
+          {% if power < 0 %} {{ power | abs }}
+          {% else %} {{ 0 }}
+          {% endif %}
+      power_in_grid:
+        friendly_name: Putere In Retea
         unique_id: power_in_grid
         unit_of_measurement: W
         device_class: power
-        state_class: measurement
-        state: >-
-          {% set power = states('sensor.victron_system_grid_l1') | int(0) %}
-          {{ power | abs if power < 0 else 0 }}
-
-      - name: Putere Din Retea
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_grid_l1')) %}
+          {% if power < 0 %} {{ power | abs }}
+          {% else %} {{ 0 }}
+          {% endif %}
+      power_out_grid:
+        friendly_name: Putere Din Retea
         unique_id: power_out_grid
         unit_of_measurement: W
         device_class: power
-        state_class: measurement
-        state: >-
-          {% set power = states('sensor.victron_system_grid_l1') | int(0) %}
-          {{ power if power > 0 else 0 }}
-
-  - lock:
-      - name: Poarta
-        unique_id: door_bell
-        state: "{{ not is_state('timer.door_bell_lock', 'active') }}"
-        lock: []
-        unlock:
-          - action: dahua_vto.open_door
-            data:
-              entity_id: sensor.door_bell_status
-              channel: 1
-              short_number: HA
-
-
-sensor:
+        value_template:  >-
+          {% set power = int(states('sensor.victron_system_grid_l1')) %}
+          {% if power > 0 %} {{ power }}
+          {% else %} {{ 0 }}
+          {% endif %}
   - platform: integration
     source: sensor.pv_power
     name: Energie Produsa
@@ -96,6 +87,22 @@ timer:
   door_bell_lock:
     name: Poarta
     icon: mdi:timer
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+lock:
+  - platform: template
+    name: Poarta
+    unique_id: door_bell
+    value_template: "{{ not is_state('timer.door_bell_lock', 'active') }}"
+    optimistic: false
+    lock:
+    unlock:
+      - service: dahua_vto.open_door
+        data_template:
+          entity_id: sensor.door_bell_status
+          channel: 1
+          short_number: HA
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -137,8 +144,7 @@ timer:
 
 
 
-logger:
-       default: info
-       logs:
-        #  homeassistant.components.mqtt: debug
-         custom_components.victron: critical
+# logger:
+#        default: info
+#        logs:
+#          homeassistant.components.mqtt: debug

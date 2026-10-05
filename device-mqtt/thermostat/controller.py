@@ -56,8 +56,9 @@ class Controller:
     def get_mode(self):
         mode = self._mode.get()
         if mode == self.MODE_AUTO and not util.is_time_synchronized:
+            # log.info('DEBUG: forced to manual mode no time sync available')
             return self.MODE_MANUAL
-        return self._mode.get()
+        return mode
 
     def get_delta_start(self):
         return self._delta_start.get()
@@ -127,6 +128,7 @@ class Controller:
         await asyncio.sleep(25)  # wait 25 seconds so the time can be synchronized
         while True:
             temp = self._temp_sensor.read_temperature()
+            # temp = 22.2  # DEBUG
             has_changed = self._temp != temp
             self._temp = temp
             if self._temp is None:
@@ -142,6 +144,7 @@ class Controller:
 
             mode = self.get_mode()
             if self._last_mode != mode:
+                # log.info('DEBUG: mode switch from %s to %s' % (self._last_mode, mode))
                 self._listeners.notify('mode')
                 self._last_mode = mode
 

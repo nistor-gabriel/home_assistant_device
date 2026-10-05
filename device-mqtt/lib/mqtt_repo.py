@@ -28,8 +28,8 @@ from wlan import Wlan
 
 class MQTTRepo:
 
-    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 10,
-                 interval_mqtt_reconnect: float = 5, interval_mqtt_keepalive: float = 60):
+    def __init__(self, config: Config, wlan: Wlan, loop: asyncio.AbstractEventLoop, interval_mqtt_check: float = 0.05,
+                 interval_mqtt_reconnect: float = 10, interval_mqtt_keepalive: float = 60):
         self._wlan = wlan
         self._loop = loop
         self._pending: typ.Union[None, typ.Dict[str, (str, bool)]] = None
@@ -165,28 +165,30 @@ class MQTTRepo:
                 count = 0  # We push pending message every 10 msg checks
                 try:
                     topic_pending, (msg_pending, lazy_pending) = self._pending.popitem()
-                    self.put(topic_pending, msg_pending, lazy_pending)
-                    # print('DEBUG: put pending %s' % (topic_pending,))
+                    self._publish(topic_pending, msg_pending, lazy_pending, do_pending=False)
+                    # log.info('DEBUG: put pending %s=%s' % (topic_pending, msg_pending))
                 except KeyError:
                     self._pending = None
+                    # log.info('DEBUG: cleared pending')
 
             count += 1
             await asyncio.sleep(self._interval_mqtt_check)
 
-    def _publish(self, topic: str, msg: str, lazy: bool):
+    def _publish(self, topic: str, msg: str, lazy: bool, do_pending: bool = True):
         if self._client:
             if lazy:
                 msg_lazy = self._lazy.get(topic, None)
                 if msg_lazy is not None and msg_lazy == msg:
                     return True
-            try:
-                self._client.publish(topic, msg, True)
-                if lazy:
-                    self._lazy[topic] = msg
-                return True
-            except Exception as e:
-                log.error('exception occurred on publish "%s": %s' % (topic, msg), e)
-                self._disconnect()
+            if not self._pending or not do_pending:
+                try:
+                    self._client.publish(topic, msg, True)
+                    if lazy:
+                        self._lazy[topic] = msg
+                    return True
+                except Exception as e:
+                    log.error('exception occurred on publish "%s": %s' % (topic, msg), e)
+                    self._disconnect()
 
         self._pending = self._pending if self._pending else {}
         self._pending[topic] = (msg, lazy)

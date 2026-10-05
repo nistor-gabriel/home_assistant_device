@@ -110,6 +110,8 @@ def install_switches(app: Microdot, auth: Auth, mqtt: MQTTRepo, device: Device, 
         if switch.get_on_since():
             data['onSince'] = util.format_date(time.localtime(switch.get_on_since()))
             data['stopTimeout'] = switch.get_stop_time()
+        if switch.is_name_managed():
+            data['managedName'] = True
         return data
 
     def get_switch(id_: int):
@@ -141,6 +143,8 @@ def install_switches(app: Microdot, auth: Auth, mqtt: MQTTRepo, device: Device, 
             return '', 404
         name = util.get_body_str(request.json, 'name')
         if name is not None:
+            if switch.is_name_managed():
+                return {'name': 'readonly'}, 400
             if name is util.INVALID or not switch.set_name(name):
                 return {'name': 'invalid'}, 400
             else:

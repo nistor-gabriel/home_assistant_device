@@ -1,0 +1,127 @@
+{
+  "@template": {
+    "availability_topic": "device/%(device_id)s/status",
+    "payload_available": "online",
+    "payload_not_available": "offline",
+    "optimistic": false,
+    "qos": 1,
+    "retain": false
+  },
+   "homeassistant/switch/%(device_id)s/disabledbox1/config": {
+    "name": "Disabled %(name_box1)s Auto Dry",
+    "object_id": "%(device_id)s_disabledbox1",
+    "unique_id": "%(device_id)s_disabledbox1",
+    "state_topic": "device/%(device_id)s/disabledbox1",
+    "command_topic": "device/%(device_id)s/disabledbox1/set",
+    "entity_category": "config",
+    "payload_on": "ON",
+    "payload_off": "OFF",
+    "state_on": "ON",
+    "state_off": "OFF"
+  },
+   "homeassistant/switch/%(device_id)s/disabledbox2/config": {
+    "name": "Disabled %(name_box2)s Auto Dry",
+    "object_id": "%(device_id)s_disabledbox2",
+    "unique_id": "%(device_id)s_disabledbox2",
+    "state_topic": "device/%(device_id)s/disabledbox2",
+    "command_topic": "device/%(device_id)s/disabledbox2/set",
+    "entity_category": "config",
+    "payload_on": "ON",
+    "payload_off": "OFF",
+    "state_on": "ON",
+    "state_off": "OFF"
+  },
+  "homeassistant/sensor/%(device_id)s/box1temperature/config": {
+    "name": "Temperature for %(name_box1)s",
+    "state_topic": "device/%(device_id)s/box1/stats",
+    "device_class": "temperature",
+    "unique_id": "%(device_id)s_temp_box1",
+    "object_id": "%(device_id)s_temp_box1",
+    "icon": "mdi:thermometer-high",
+    "unit_of_measurement": "°C",
+    "value_template": "{{ value_json.temperature }}"
+  },
+  "homeassistant/sensor/%(device_id)s/box1humidity/config": {
+    "name": "Relative Humidity for %(name_box1)s",
+    "state_topic": "device/%(device_id)s/box1/stats",
+    "state_class": "measurement",
+    "device_class": "humidity",
+    "unique_id": "%(device_id)s_hum_box1",
+    "object_id": "%(device_id)s_hum_box1",
+    "icon": "mdi:water-percent",
+    "unit_of_measurement": "%%",
+    "value_template": "{{ value_json.humidity }}"
+  },
+  "homeassistant/sensor/%(device_id)s/box1abshumidity/config": {
+    "name": "Absolute Humidity for %(name_box1)s",
+    "state_topic": "device/%(device_id)s/box1/stats",
+    "state_class": "measurement",
+    "unique_id": "%(device_id)s_abs_hum_box1",
+    "object_id": "%(device_id)s_abs_hum_box1",
+    "icon": "mdi:water",
+    "unit_of_measurement": "g/m³",
+    "value_template": "{{ value_json.humidityAbsolute }}"
+  },
+  "homeassistant/sensor/%(device_id)s/box2temperature/config": {
+    "name": "Temperature for %(name_box2)s",
+    "state_topic": "device/%(device_id)s/box2/stats",
+    "device_class": "temperature",
+    "unique_id": "%(device_id)s_temp_box2",
+    "object_id": "%(device_id)s_temp_box2",
+    "icon": "mdi:thermometer-high",
+    "unit_of_measurement": "°C",
+    "value_template": "{{ value_json.temperature }}"
+  },
+  "homeassistant/sensor/%(device_id)s/box2humidity/config": {
+    "name": "Relative Humidity for %(name_box2)s",
+    "state_topic": "device/%(device_id)s/box2/stats",
+    "state_class": "measurement",
+    "device_class": "humidity",
+    "unique_id": "%(device_id)s_hum_box2",
+    "object_id": "%(device_id)s_hum_box2",
+    "icon": "mdi:water-percent",
+    "unit_of_measurement": "%%",
+    "value_template": "{{ value_json.humidity }}"
+  },
+  "homeassistant/sensor/%(device_id)s/box2abshumidity/config": {
+    "name": "Absolute Humidity for %(name_box2)s",
+    "state_topic": "device/%(device_id)s/box2/stats",
+    "state_class": "measurement",
+    "unique_id": "%(device_id)s_abs_hum_box2",
+    "object_id": "%(device_id)s_abs_hum_box2",
+    "icon": "mdi:water",
+    "unit_of_measurement": "g/m³",
+    "value_template": "{{ value_json.humidityAbsolute }}"
+  },
+  "homeassistant/sensor/%(device_id)s/exteriortemperature/config": {
+    "name": "Temperature for exterior",
+    "state_topic": "device/%(device_id)s/exterior/stats",
+    "device_class": "temperature",
+    "unique_id": "%(device_id)s_temp_exterior",
+    "object_id": "%(device_id)s_temp_exterior",
+    "icon": "mdi:thermometer-high",
+    "unit_of_measurement": "°C",
+    "value_template": "{{ value_json.temperature }}"
+  },
+  "homeassistant/sensor/%(device_id)s/exteriorhumidity/config": {
+    "name": "Relative Humidity for exterior",
+    "state_topic": "device/%(device_id)s/exterior/stats",
+    "state_class": "measurement",
+    "device_class": "humidity",
+    "unique_id": "%(device_id)s_hum_exterior",
+    "object_id": "%(device_id)s_hum_exterior",
+    "icon": "mdi:water-percent",
+    "unit_of_measurement": "%%",
+    "value_template": "{{ value_json.humidity }}"
+  },
+  "homeassistant/sensor/%(device_id)s/exteriorabshumidity/config": {
+    "name": "Absolute Humidity for exterior",
+    "state_topic": "device/%(device_id)s/exterior/stats",
+    "state_class": "measurement",
+    "unique_id": "%(device_id)s_abs_hum_exterior",
+    "object_id": "%(device_id)s_abs_hum_exterior",
+    "icon": "mdi:water",
+    "unit_of_measurement": "g/m³",
+    "value_template": "{{ value_json.humidityAbsolute }}"
+  }
+}

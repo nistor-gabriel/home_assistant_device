@@ -52,14 +52,18 @@ export interface Fs {
     items: FsItem[];
 }
 
-export interface SwitchItem {
+export type SwitchItem = {
     id: number;
-    on: boolean;
     name: string;
     disabled: boolean;
+    managedName?: true;
+} & ({
+    on: false;
+} | {
+    on: true;
     onSince: string;
     stopTimeout: number;
-}
+})
 
 export interface Switch {
     items: SwitchItem[];

@@ -5,6 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 /* ========================================================================== */
 
+export interface TimeoutValue {
+    isCustom: boolean;
+    timeout: number;
+}
+
 export interface TimeoutSelectProps {
     options: Array<{
         label: string;
@@ -14,8 +19,8 @@ export interface TimeoutSelectProps {
     disabled?: boolean;
     name?: string;
     onBlur?: () => any;
-    onChange?: (value: number) => any;
-    value?: number;
+    onChange?: (value: TimeoutValue) => any;
+    value?: TimeoutValue;
     minValue?: number;
 }
 
@@ -92,24 +97,22 @@ const TimeoutSelect: React.FC<TimeoutSelectProps> = forwardRef(({
     // Initialize from value prop
     useEffect(() => {
         if (value != undefined) {
-            const isPreset = options.some(opt => opt.value === value);
-
-            if (isPreset) {
-                setSelectTimeout(value.toString());
-                setMajorTimeout(0);
-                setMinorTimeout(0);
-            } else {
+            if(value.isCustom) {
                 setSelectTimeout('custom');
-                if (isNaN(value)) {
+                if (isNaN(value.timeout)) {
                     setSelectTimeout(options[0].value.toString());
                 } else {
-                    setTotal(value);
+                    setTotal(value.timeout);
                 }
+            } else {
+                setSelectTimeout(value.timeout.toString());
+                setMajorTimeout(0);
+                setMinorTimeout(0);
             }
         } else {
             setSelectTimeout('');
         }
-    }, [value, options, variant]);
+    }, [value, options.map((opt) => opt.label).join('|'), variant]);
 
     const setTotal = (total: number) => {
         setMajorTimeout(Math.floor(total / majorFactor));
@@ -129,23 +132,23 @@ const TimeoutSelect: React.FC<TimeoutSelectProps> = forwardRef(({
     const setSelected = (newValue: string) => {
         setSelectTimeout(newValue);
         if (newValue !== 'custom') {
-            onChange?.(parseFloat(newValue));
+            onChange?.({isCustom: false, timeout: parseFloat(newValue)});
         } else {
-            onChange?.(processTotal(majorTimeout, minorTimeout));
+            onChange?.({isCustom: true, timeout: processTotal(majorTimeout, minorTimeout)});
         }
     };
 
     const setMajor = (newValue: number | '') => {
         setMajorTimeout(newValue);
         if (onChange) {
-            onChange?.(processTotal(newValue, minorTimeout));
+            onChange?.({isCustom: true, timeout: processTotal(newValue, minorTimeout)});
         }
     };
 
     const setMinor = (newValue: number | '') => {
         setMinorTimeout(newValue);
         if (onChange) {
-            onChange?.(processTotal(majorTimeout, newValue));
+            onChange?.({isCustom: true, timeout: processTotal(majorTimeout, newValue)});
         }
     };
 

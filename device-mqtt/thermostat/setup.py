@@ -55,12 +55,18 @@ async def start_server():
     if __starting:
         return
     __starting = True
+    count = 1
     while __starting:
         try:
             await app.start_server(port=80, debug=False)
             __starting = False
         except OSError as e:
-            log.error('start server: ', e)
+            log.error('start server failed %s:' % (count,), e)
+            if count >= 10:     # Will reboot if failed to start the server 10 times
+                device.reboot()
+            else:
+                count += 1
+                await asyncio.sleep(3)
 
 
 def on_connect(has_internet: bool):

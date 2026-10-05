@@ -91,9 +91,13 @@ const SwitchForm: React.FC<{
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Name</FormLabel>
+                                    { sw.managedName ? (
+                                        <FormLabel className="text-gray-500">Name <i>(read only managed name)</i></FormLabel>
+                                    ) : (
+                                        <FormLabel>Name</FormLabel>
+                                    )}
                                     <FormControl>
-                                        <Input placeholder="enter the switch name" {...field} />
+                                        <Input placeholder="enter the switch name" {...field} disabled={sw.managedName} />
                                     </FormControl>
                                     <FormMessage className="text-xs">&nbsp;</FormMessage>
                                 </FormItem>

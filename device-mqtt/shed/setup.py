@@ -5,13 +5,12 @@ from config import Config
 # from watchdog import WatchDog
 from device import Device
 from mqtt_repo import MQTTRepo
-from trigger_button_toggle import TriggerButtonToggle
-from blinker import Blinker
 from switch import Switch
 from controller import Controller
 from route_stats import install_stats
 from route_fs import install_fs
 from route_mqtt import install_mqtt
+from trigger_button_toggle import TriggerButtonToggle
 from route_api import install_api
 from route_wlan import install_wlan
 from route_ui import install_ui
@@ -72,21 +71,37 @@ def on_disconnect():
 config = Config(filename='config.json', loop=loop)
 logger = log.logger = log.LoggerFile(config=config, log_to_file=True, max_file_size=10 * 4096)
 
-name = config.create('name', 'Garden Core')
+name = config.create('name', 'Shed')
 wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
 mqtt = MQTTRepo(config=config, wlan=wlan, loop=loop)
-device = Device(config=config, mqtt=mqtt, wlan=wlan, loop=loop, name=name, api_type='gardencore', version='3.0')
+device = Device(config=config, mqtt=mqtt, wlan=wlan, loop=loop, name=name, api_type='shed', version='1.0')
 # watchdog = WatchDog(loop=loop)
 
-trigger_pump = TriggerButtonToggle(pin=16, loop=loop)
-trigger_light = TriggerButtonToggle(pin=17, loop=loop)
-blinker_pump = Blinker(pin=18, loop=loop)
-switch_pump = Switch(pin=26, id_=1, config=config, loop=loop, blinker=blinker_pump, trigger=trigger_pump)
-switch_light = Switch(pin=27, id_=2, config=config, loop=loop, trigger=trigger_light)
-controller = Controller(config=config, pin=28, off_low_pressure=1, off_low_period=3, off_low_start_period=5,
-                        off_high_pressure=4, off_high_period=3, switch_pump=switch_pump, blinker_pump=blinker_pump,
-                        loop=loop)
+triggers = [
+    TriggerButtonToggle(pin=16, loop=loop),
+    TriggerButtonToggle(pin=17, loop=loop)
+]
+
+
+def name_box1():
+    return 'Ventilation ' + controller.get_name_box1()
+
+
+def name_box2():
+    return 'Ventilation ' + controller.get_name_box2()
+
+
+switches = [
+    Switch(pin=21, id_=1, config=config, loop=loop, trigger=triggers[0]),
+    Switch(pin=22, id_=2, config=config, loop=loop, trigger=triggers[1]),
+    Switch(pin=26, id_=3, config=config, loop=loop, name_source=name_box1),
+    Switch(pin=27, id_=4, config=config, loop=loop, name_source=name_box2)
+]
+
+controller = Controller(config=config, pin_dht22_box1=2, pin_dht22_box2=3, pin_dht22_exterior=4, pin_dht22_power=20,
+                        switch_box1=switches[2], switch_box2=switches[3], loop=loop,
+                        delta_grams=10.0, box1_disabled=True, box2_disabled=True)
 
 wlan.add_connect_listener(on_connect)
 wlan.add_disconnect_listener(on_disconnect)
@@ -97,11 +112,8 @@ mqtt.setup()
 wlan.setup()
 device.setup()
 # watchdog.setup()
-trigger_pump.setup()
-trigger_light.setup()
-blinker_pump.setup()
-switch_pump.setup()
-switch_light.setup()
+[switch.setup() for switch in switches]
+[trigger.setup() for trigger in triggers]
 controller.setup()
 
 install_log(app=app, auth=auth, logger=logger)
@@ -109,7 +121,7 @@ install_mqtt(app=app, auth=auth, mqtt=mqtt)
 install_api(app=app, auth=auth, device=device)
 install_stats(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop)
 install_wlan(app=app, auth=auth, wlan=wlan, mqtt=mqtt, device=device, loop=loop)
-install_switches(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop, switches=[switch_light, switch_pump])
+install_switches(app=app, auth=auth, mqtt=mqtt, device=device, loop=loop, switches=switches)
 install_controller(app=app, auth=auth, controller=controller, mqtt=mqtt, device=device)
 install_fs(app=app, auth=auth)
 install_ui(app=app, auth=auth)

@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableRow, TableHeader, TableHead } from '@/components/ui/table';
 import { SpinnerBars } from '@/components/ui/shadcn-io/spinner';
 import { toast } from 'sonner';
-import TimeoutSelect from '@/components/timeout';
+import TimeoutSelect, { TimeoutValue } from '@/components/timeout';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
@@ -27,7 +27,7 @@ const DashboardSwitch: React.FC = () => {
     const isOk = rsp.status === 'ok';
     const [targetSwitch, setTargetSwitch] = useState<ep.SwitchItem | false>(false);
     const [isProcessing, setProcessing] = useState<boolean>(false);
-    const [selectTimeout, setSelectTimeout] = useState<number>(0);
+    const [selectTimeout, setSelectTimeout] = useState<TimeoutValue>({ isCustom:false, timeout: 0 });
 
     const compensateDate = useDeltaTimeCompensation();
 
@@ -56,8 +56,8 @@ const DashboardSwitch: React.FC = () => {
             return;
         }
         let on: boolean | number = true;
-        if (selectTimeout !== 0) {
-            on = selectTimeout;
+        if (selectTimeout && selectTimeout.timeout !== 0) {
+            on = selectTimeout?.timeout;
         }
 
         const path = ep.pathSwitchItem(targetSwitch);
@@ -146,7 +146,7 @@ const DashboardSwitch: React.FC = () => {
                                 {value: 60, label: '1 hour'},
                                 {value: 90, label: '1 and half hours'},
                                 {value: 120, label: '2 hours'},
-                            ]} onChange={setSelectTimeout} value={selectTimeout} variant="minutes"/>
+                            ]} onChange={setSelectTimeout} value={selectTimeout} variant="minutes-minutes"/>
                         </div>
                     </AlertDialogHeader>
 
