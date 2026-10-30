@@ -1,5 +1,6 @@
 from trigger import Trigger
 import time
+import log
 
 try:
     import typ
@@ -45,11 +46,14 @@ class TriggerButtonToggle(Trigger):
             ctime = time.time()
             if self._delta_time <= ctime:
                 if self._pin.value():
+                    # log.info('has TRUE on trigger toggle pin %s' % (self._pin_number,))
                     if not self._last_is_on:
                         self._delta_time = ctime + self._delta_period
                         self._is_on = not self._is_on
                         self._last_is_on = True
+                        # log.info('has %s on trigger toggle pin %s' % (self._is_on, self._pin_number,))
                         self._listeners.notify(self)
                 else:
+                    # log.info('has FALSE on trigger toggle pin %s' % (self._pin_number,))
                     self._last_is_on = False
             await asyncio.sleep(self._interval_check)

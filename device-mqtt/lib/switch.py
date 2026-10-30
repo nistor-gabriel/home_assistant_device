@@ -28,7 +28,7 @@ class Switch:
 
     def __init__(self, pin: int, id_: int, config: Config, loop: asyncio.AbstractEventLoop,
                  blinker: Blinker | None = None, trigger: Trigger | None = None,
-                 name_source: typ.Callable[[], str] | None = None):
+                 name_source: typ.Callable[[], str] | None = None, drain: bool = False):
         self._listeners = util.Listeners()
         self._id = id_
         self._name_source = name_source
@@ -44,7 +44,7 @@ class Switch:
         self._on_since = None
         self._stop_time = 0
 
-        self._pin = Pin(pin, mode=Pin.OUT)
+        self._pin = Pin(pin, mode=Pin.OPEN_DRAIN if drain else Pin.OUT)
         self._pin.high()
 
         self._blinker = blinker

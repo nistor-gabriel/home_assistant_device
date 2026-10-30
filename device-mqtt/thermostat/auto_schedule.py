@@ -28,7 +28,7 @@ class AutoSchedule:
             # noinspection PyTypeChecker
             self._temp = json.load(f)
             f.close()
-        except OSError as e:
+        except OSError:
             log.info('no temperature file available')
 
         self._has_changed = False

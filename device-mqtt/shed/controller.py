@@ -232,7 +232,7 @@ class Controller:
                 # log.info('box1 stats abs exterior %s, abs box1 %s' % (self._hum_abs_exterior, self._hum_abs_box1))
                 if self._is_box1_on:
                     if self._hum_abs_exterior is None or self._hum_abs_box1 is None or \
-                            self._hum_abs_exterior + self._delta_grams.get() >= self._hum_abs_box1:
+                            self._hum_abs_exterior >= self._hum_abs_box1:
                         # log.info('turning box1 off')
                         self._is_box1_on = False
                         self._switch_box1.off()
@@ -245,7 +245,7 @@ class Controller:
             if not self._is_box2_disabled.get():
                 if self._is_box2_on:
                     if self._hum_abs_exterior is None or self._hum_abs_box2 is None or \
-                            self._hum_abs_exterior + self._delta_grams.get() >= self._hum_abs_box2:
+                            self._hum_abs_exterior > self._hum_abs_box2:
                         self._is_box2_on = False
                         self._switch_box2.off()
                 elif self._hum_abs_exterior is not None and self._hum_abs_box2 is not None and \

@@ -1,0 +1,41 @@
+{
+  "@template": {
+    "availability_topic": "device/%(device_id)s/status",
+    "payload_available": "online",
+    "payload_not_available": "offline",
+    "optimistic": false,
+    "qos": 1,
+    "retain": false
+  },
+  "homeassistant/sensor/%(device_id)s/attictemperature/config": {
+    "name": "Temperature for attic",
+    "state_topic": "device/%(device_id)s/attic/stats",
+    "device_class": "temperature",
+    "unique_id": "%(device_id)s_temp_attic",
+    "object_id": "%(device_id)s_temp_attic",
+    "icon": "mdi:thermometer-high",
+    "unit_of_measurement": "°C",
+    "value_template": "{{ value_json.temperature }}"
+  },
+  "homeassistant/sensor/%(device_id)s/attichumidity/config": {
+    "name": "Relative Humidity for attic",
+    "state_topic": "device/%(device_id)s/attic/stats",
+    "state_class": "measurement",
+    "device_class": "humidity",
+    "unique_id": "%(device_id)s_hum_attic",
+    "object_id": "%(device_id)s_hum_attic",
+    "icon": "mdi:water-percent",
+    "unit_of_measurement": "%%",
+    "value_template": "{{ value_json.humidity }}"
+  },
+  "homeassistant/sensor/%(device_id)s/atticabshumidity/config": {
+    "name": "Absolute Humidity for attic",
+    "state_topic": "device/%(device_id)s/attic/stats",
+    "state_class": "measurement",
+    "unique_id": "%(device_id)s_abs_hum_attic",
+    "object_id": "%(device_id)s_abs_hum_attic",
+    "icon": "mdi:water",
+    "unit_of_measurement": "g/m³",
+    "value_template": "{{ value_json.humidityAbsolute }}"
+  }
+}
