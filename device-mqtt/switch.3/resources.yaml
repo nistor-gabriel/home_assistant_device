@@ -11,8 +11,8 @@
   src: ../lib/wlan.py
 - dst: auth.py
   src: ../lib/auth.py
-#- dst: watchdog.py
-#  src: ../lib/watchdog.py
+- dst: watchdog.py
+  src: ../lib/watchdog.py
 
 - dst: mqtt_repo.py
   src: ../lib/mqtt_repo.py
@@ -73,7 +73,5 @@
 
 - dst: config.json
   ignore: Yes
-- dst: log.1.txt
-  ignore: Yes
-- dst: log.2.txt
+- dst: log.txt
   ignore: Yes

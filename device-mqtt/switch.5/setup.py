@@ -2,7 +2,7 @@ from microdot import Microdot, Response
 from wlan import Wlan
 from auth import Auth
 from config import Config
-# from watchdog import WatchDog
+from watchdog import WatchDog
 from device import Device
 from mqtt_repo import MQTTRepo
 from switch import Switch
@@ -68,17 +68,19 @@ def on_disconnect():
 config = Config(filename='config.json', loop=loop)
 logger = log.logger = log.LoggerFile(config=config, log_to_file=True, max_file_size=10 * 4096)
 
-name = config.create('name', 'Sprinkler 3')
+name = config.create('name', 'Switch 5')
 wlan = Wlan(config=config, name=name, loop=loop)
 auth = Auth(config=config, wlan=wlan)
 mqtt = MQTTRepo(config=config, wlan=wlan, loop=loop)
-device = Device(config=config, mqtt=mqtt, wlan=wlan, loop=loop, name=name, api_type='sprinkler', version='3.0')
-# watchdog = WatchDog(loop=loop)
+device = Device(config=config, mqtt=mqtt, wlan=wlan, loop=loop, name=name, api_type='switch', version='3.0')
+watchdog = WatchDog(loop=loop)
 
 switches = [
     Switch(pin=28, id_=1, config=config, loop=loop),
     Switch(pin=27, id_=2, config=config, loop=loop),
-    Switch(pin=26, id_=3, config=config, loop=loop)
+    Switch(pin=26, id_=3, config=config, loop=loop),
+    Switch(pin=22, id_=4, config=config, loop=loop),
+    Switch(pin=21, id_=5, config=config, loop=loop)
 ]
 
 wlan.add_connect_listener(on_connect)
@@ -89,7 +91,7 @@ auth.setup()
 mqtt.setup()
 wlan.setup()
 device.setup()
-# watchdog.setup()
+watchdog.setup()
 [switch.setup() for switch in switches]
 
 install_log(app=app, auth=auth, logger=logger)

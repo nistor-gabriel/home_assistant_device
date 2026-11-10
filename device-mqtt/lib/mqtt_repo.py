@@ -32,7 +32,8 @@ class MQTTRepo:
                  interval_mqtt_reconnect: float = 10, interval_mqtt_keepalive: float = 60):
         self._wlan = wlan
         self._loop = loop
-        self._pending: typ.Union[None, typ.Dict[str, (str, bool)]] = None
+        self._pending: typ.Union[None, typ.List[(str, str, bool)]] = None
+        self._pending_msg: typ.Union[None, (str, str, bool)] = None
         self._lazy: typ.Dict[str, str] = {}
         self._server = config.create('mqtt_server', '')
         self._port = config.create('mqtt_port', 0)
@@ -118,7 +119,7 @@ class MQTTRepo:
                 for cb in cbs:
                     cb(topic_str, msg_str)
 
-        # last_ping = util.uptime()
+        last_ping = util.uptime()
         count = 0
         while True:
             if self._wlan.wlan and self._wlan.wlan.isconnected() and not self._disabled.get():
@@ -143,33 +144,40 @@ class MQTTRepo:
                         self._disconnect()
                         await asyncio.sleep(self._interval_mqtt_reconnect)
 
-            # if self._client:
-            #     if util.uptime() - last_ping > self._interval_mqtt_keepalive / 2:
-            #         try:
-            #             self._client.ping()
-            #             last_ping = util.uptime()
-            #         except OSError as e:
-            #             print('ERROR: exception occurred on ping:', e)
-            #             # noinspection PyUnresolvedReferences
-            #             sys.print_exception(e)
-            #             self._disconnect()
+            if self._client:
+                if util.uptime() - last_ping > self._interval_mqtt_keepalive / 2:
+                    try:
+                        self._client.ping()
+                        last_ping = util.uptime()
+                    except OSError as e:
+                        print('ERROR: exception occurred on ping:', e)
+                        # noinspection PyUnresolvedReferences
+                        sys.print_exception(e)
+                        self._disconnect()
 
             if self._client:
                 try:
                     self._client.check_msg()
                 except OSError as e:
                     log.error('exception occurred on message check:', e)
+                    if self._pending_msg is not None:
+                        # print('DEBUG: pending message ERROR for %s' % (self._pending_msg[0],))
+                        if self._pending:
+                            self._pending.insert(self._pending_msg, 0)
+                        else:
+                            self._pending = [self._pending_msg]
+                        self._pending_msg = None
                     self._disconnect()
 
-            if count > 5 and self._client and self._pending is not None:
+            if self._client and count > 5 and self._pending is not None:
                 count = 0  # We push pending message every 10 msg checks
                 try:
-                    topic_pending, (msg_pending, lazy_pending) = self._pending.popitem()
+                    topic_pending, msg_pending, lazy_pending = self._pending.pop(0)
                     self._publish(topic_pending, msg_pending, lazy_pending, do_pending=False)
-                    # log.info('DEBUG: put pending %s=%s' % (topic_pending, msg_pending))
-                except KeyError:
+                    # print('DEBUG: put pending %s=%s' % (topic_pending, msg_pending))
+                except IndexError:
                     self._pending = None
-                    # log.info('DEBUG: cleared pending')
+                    # print('DEBUG: cleared pending')
 
             count += 1
             await asyncio.sleep(self._interval_mqtt_check)
@@ -183,6 +191,9 @@ class MQTTRepo:
             if not self._pending or not do_pending:
                 try:
                     self._client.publish(topic, msg, True)
+                    if do_pending:
+                        # print('DEBUG: pending set for %s' % (topic,))
+                        self._pending_msg = (topic, msg, lazy)
                     if lazy:
                         self._lazy[topic] = msg
                     return True
@@ -190,8 +201,8 @@ class MQTTRepo:
                     log.error('exception occurred on publish "%s": %s' % (topic, msg), e)
                     self._disconnect()
 
-        self._pending = self._pending if self._pending else {}
-        self._pending[topic] = (msg, lazy)
+        self._pending = self._pending if self._pending else []
+        self._pending.append((topic, msg, lazy))
         return False
 
     def _subscribe(self, topic: str):
@@ -224,6 +235,9 @@ class MQTTRepo:
         # print('DEBUG: subscribed to topic', topic, 'with call back', cb)
 
     def put(self, topic: str, msg: str, lazy: bool = True):
+        """The lazy flag indicates if the put should be made only if the current value is different
+        from the one provided.
+        """
         topic = topic % {'id': self.get_active_client_id()}
         return self._publish(topic, msg, lazy)
 

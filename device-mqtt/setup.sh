@@ -8,3 +8,4 @@ python3.9 -m venv ./venv
 ./venv/bin/python3.9 -m pip install pyyaml
 ./venv/bin/python3.9 -m pip install requests
 ./venv/bin/python3.9 -m pip install mpy-cross
+./venv/bin/python3.9 -m pip install pytest
